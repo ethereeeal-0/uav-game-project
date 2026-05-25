@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>智创飞控 · 无人机战略模拟 | 联盟系统+情报投资</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a2a2a 0%, #1a3e3e 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .story-container {
+            background: linear-gradient(135deg, #1a2e2e, #162e2e);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(102,126,234,0.3);
+        }
+        .story-container::before { content: "\2708\FE0F"; position: absolute; right: 10px; bottom: 10px; font-size: 80px; opacity: 0.08; }
+        .story-title { font-size: 20px; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .story-content { font-size: 14px; line-height: 1.8; opacity: 0.95; }
+        .story-update { font-size: 12px; margin-top: 12px; color: #ffd700; border-top: 1px solid rgba(255,215,0,0.3); padding-top: 10px; }
+        .industry-panel { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px; margin-bottom: 15px; backdrop-filter: blur(10px); }
+        .industry-title { font-size: 14px; font-weight: bold; color: #a8c0ff; margin-bottom: 10px; }
+        .login-container { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 30px 20px; overflow-y: auto; background: radial-gradient(circle at 10% 30%, #1b3b3b, #0a2323); }
+        .login-header { text-align: center; margin-bottom: 20px; }
+        .logo { font-size: 50px; margin-bottom: 5px; }
+        .title { font-size: 26px; font-weight: bold; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .subtitle { font-size: 12px; color: rgba(255,255,255,0.8); }
+        .login-card { width: 100%; max-width: 780px; background: rgba(255,255,255,0.96); border-radius: 36px; padding: 32px 28px; box-shadow: 0 25px 45px rgba(0,0,0,0.25); backdrop-filter: blur(2px); }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 6px; color: #2d5a5a; }
+        .form-input, .form-select { width: 100%; padding: 10px 14px; border-radius: 20px; border: 1px solid #cbdcdc; background: white; font-size: 14px; transition: 0.2s; }
+        .form-input:focus, .form-select:focus { border-color: #1e7f5e; outline: none; box-shadow: 0 0 0 2px rgba(30,127,94,0.2); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .btn { padding: 10px 20px; border-radius: 40px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, #1c6e6e, #0f4f4f); color: white; }
+        .btn-primary:hover { background: linear-gradient(135deg, #0f5a5a, #0a3d3d); transform: translateY(-1px); }
+        .btn-secondary { background: #eef3f3; color: #1f5a5a; border: 1px solid #c2dbdb; }
+        .btn-danger { background: #d9534f; color: white; }
+        .btn-warning { background: #f5b042; color: #2c2c2c; }
+        .btn-block { width: 100%; margin-top: 12px; }
+        .app-container { min-height: 100vh; background: #f5f9f9; padding-top: 70px; padding-bottom: 70px; }
+        .top-nav { position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(95deg, #133b3b, #0e2d2d); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 99; }
+        .company-name { font-weight: bold; font-size: 18px; }
+        .quarter-info { font-size: 12px; opacity: 0.85; }
+        .role-badge { background: #277c7c; padding: 6px 16px; border-radius: 40px; font-size: 12px; font-weight: 500; }
+        /* 修改1：退出按钮文字变为白色，背景半透明更清晰 */
+        .top-nav .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+        }
+        .top-nav .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .content { max-width: 1400px; margin: 0 auto; padding: 20px 16px; }
+        .card { background: white; border-radius: 28px; padding: 20px 22px; box-shadow: 0 6px 14px rgba(0,0,0,0.03); margin-bottom: 24px; border: 1px solid #e2efef; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #cfe7e7; padding-bottom: 12px; margin-bottom: 18px; font-weight: 700; color: #1b5e5e; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .metrics-grid { display: flex; flex-wrap: wrap; gap: 14px; }
+        .metric-card { flex: 1; min-width: 110px; border-radius: 24px; padding: 14px 12px; color: white; background: linear-gradient(145deg, #2b7c6c, #1f6658); box-shadow: 0 6px 12px rgba(0,0,0,0.1); }
+        .metric-card.finance { background: linear-gradient(135deg, #1d7878, #0e5e5e); }
+        .metric-card.market { background: linear-gradient(135deg, #e36b5e, #ce5143); }
+        .metric-card.product { background: linear-gradient(135deg, #4b9faa, #2f7c86); }
+        .metric-card.hr { background: linear-gradient(135deg, #f09c6e, #ec7e4a); }
+        .metric-card.intel { background: linear-gradient(135deg, #8b6cc7, #684faf); }
+        .metric-label { font-size: 11px; opacity: 0.9; margin-bottom: 6px; }
+        .metric-value { font-size: 22px; font-weight: 800; }
+        .decision-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 0; border-bottom: 1px solid #def0f0; }
+        .decision-label { font-weight: 600; color: #1e5e5e; min-width: 150px; }
+        .slider { width: 200px; accent-color: #1c7e6e; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #ffffffea; backdrop-filter: blur(16px); display: flex; justify-content: space-around; padding: 8px 12px 12px; border-top: 1px solid #cae1e1; z-index: 100; }
+        .nav-item { text-align: center; cursor: pointer; padding: 6px 14px; border-radius: 40px; transition: 0.2s; background: transparent; }
+        .nav-item.active { background: #1f6e6e; color: white; }
+        .nav-icon { font-size: 22px; }
+        .nav-label { font-size: 11px; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .news-popup { position: fixed; top: 25%; right: -420px; width: 360px; background: #fff9e5; border-left: 8px solid #f2b33b; border-radius: 28px; padding: 18px; z-index: 1200; transition: 0.4s ease; box-shadow: 0 12px 30px rgba(0,0,0,0.2); cursor: pointer; }
+        .news-popup.show { right: 20px; }
+        .toast { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); background: #1f3b3b; color: white; padding: 10px 24px; border-radius: 60px; font-size: 13px; z-index: 1300; opacity: 0; transition: 0.2s; pointer-events: none; }
+        .toast.show { opacity: 1; }
+        @media (max-width: 680px) {
+            .decision-input, .slider { width: 100%; }
+            .metric-card { min-width: 130px; }
+            .news-popup { width: 85%; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+        .class-switch { background: #f0f0f0; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+        .teacher-class-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+        .ai-insight { background: #e6f7f0; border-left: 4px solid #2b9f8f; padding: 10px; border-radius: 12px; margin-top: 12px; }
+        .modal-mask { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:3000; display:flex; align-items:center; justify-content:center; }
+        .help-modal { background:white; border-radius:28px; padding:28px; max-width:700px; max-height:80vh; overflow:auto; }
+        .member-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .star-player { background: #fff9c4; border-radius: 20px; padding: 8px; margin-bottom: 8px; }
+        .rating-note { font-size: 12px; color: #666; margin: 8px 0; padding: 6px; background: #f9f9f9; border-radius: 8px; }
+        .alliance-card { background: #f1f9ff; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+        .intel-report { background: #e8f0fe; border-radius: 12px; padding: 10px; margin: 10px 0; font-size: 13px; }
+        /* 修改2：教师控制台按钮更大、间距更舒适 */
+        .teacher-panel .btn, #teacher-container .content .card .btn, #teacher-container .teacher-class-list .btn {
+            padding: 12px 24px;
+            font-size: 16px;
+            margin: 6px;
+            min-width: 120px;
+        }
+        #teacher-container .teacher-class-list {
+            gap: 15px;
+            margin: 15px 0;
+        }
+        #teacher-container .form-row {
+            gap: 15px;
+            margin: 15px 0;
+        }
+        #teacher-container .btn-block {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 开场故事模态框（详细叙事版） -->
+    <div id="story-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+        <div style="max-width: 580px; background: white; border-radius: 20px; padding: 30px; max-height: 85vh; overflow-y: auto;">
+            <div style="font-size: 60px; text-align: center; margin-bottom: 15px;">✈️🚁</div>
+            <h2 style="text-align: center; margin-bottom: 10px; color: #667eea;">「智创飞控」无人机战略模拟</h2>
+            <div style="text-align: center; font-size: 12px; color: #999; margin-bottom: 25px;">企业战略与竞争情报实训平台 | 联盟系统+情报投资</div>
+            <div style="font-size: 14px; line-height: 1.9; color: #444;">
+                <p style="margin-bottom: 18px;"><strong style="color:#667eea;">🌍 全球无人机市场背景：</strong>2024年，全球无人机市场规模突破500亿美元，中国占据约70%的消费级无人机份额和50%的工业级无人机份额。随着技术创新加速，无人机在农业、物流、巡检等领域的应用不断深化。俄乌冲突中无人机改变了战争形态，民用领域送外卖、喷洒农药、电力巡检已成常态。低空经济被列为国家战略新兴产业，各地争建无人机产业园。</p>
+                <p style="margin-bottom: 18px;"><strong style="color:#667eea;">🏢 公司定位：</strong>你和团队于2023年盛夏在深圳南山区科技园一间60平米的办公室创立「智创飞控」。创始人团队来自大疆、华为和北航，拥有十年以上飞控研发经验。公司专注于工业级无人机整机研发与飞控系统设计，首款产品「天枢」系列在农业植保和电力巡检领域获得初步认可。总部位于深圳，目前主要聚焦国内市场，但也在积极评估东南亚和中东的出海机会。</p>
+                <p style="margin-bottom: 18px;"><strong style="color:#667eea;">🎯 核心产品线：</strong><br>▸ 天枢M300：农业植保无人机，载重30kg，续航20分钟，单价¥4.8万，采用四轴八旋翼设计，配备仿地雷达。<br>▸ 天枢E6：电力巡检无人机，搭载红外热成像和30倍变焦相机，单价¥8.6万，可识别销钉级缺陷。<br>▸ 飞控系统X1：向OEM厂商提供模块化飞控解决方案，支持RTK厘米级定位，单价¥1.2万/套。</p>
+                <p style="margin-bottom: 18px;"><strong style="color:#667eea;">📊 行业竞争格局：</strong>国内市场呈现「一超多强」格局——大疆创新（市占率68%）、纵横股份（8%）、极飞科技（6%）、亿航智能（4%）。你们作为新进入者，目前市占率约2%。潜在威胁来自跨界巨头（如顺丰、美团正在自研物流无人机）和海外替代品（Skydio、Wing）。</p>
+                <p style="margin-bottom: 18px;"><strong style="color:#667eea;">💰 公司初始状态：</strong>团队25人（研发占比60%），已获Pre-A融资800万元（深圳天使母基金领投）。当前现金储备450万元，月均运营成本40万元（含房租、薪资、测试耗材）。技术评级★★★☆☆，AI飞控成熟度★★☆☆☆，国内市场渗透率2.3%。CEO为连续创业者，CTO来自大疆算法团队。</p>
+                <p style="margin-bottom: 18px;"><strong style="color:#667eea;">🌏 市场战略选择：</strong>你可以选择深耕国内市场（主攻农业、电力），也可以开拓海外市场（东南亚农业植保、中东石油巡检、欧洲城市物流）。不同市场有截然不同的政策环境、文化壁垒和增长潜力。</p>
+                <p style="margin-bottom: 10px;"><strong style="color:#667eea;">👥 实验说明：</strong>教师控制季度推进。年底统一评优（公开分、悄悄分、系统分）。新增联盟系统：可以在研发、生产、渠道、情报等任意领域建立双边或多边联盟，每半年可以更新一次联盟选择，并可投资情报查看对方优劣势，发送/接收/拒绝联盟意向。</p>
+            </div>
+            <div style="background: #f0f4ff; border-radius: 12px; padding: 15px; margin: 20px 0;">
+                <p style="font-size: 13px; color: #667eea; font-weight: bold;">📌 实验说明</p>
+                <p style="font-size: 12px; color: #666;">教师控制季度推进。年底统一评优。联盟系统每半年可更新，盟友间可公开/非公开/系统评分。</p>
+            </div>
+            <button class="btn btn-primary btn-block" style="margin-top: 10px;" onclick="closeStoryModal()">✈️ 开启征程</button>
+        </div>
+    </div>
+
+    <!-- 登录页面（删除了专业方向，样式更精致） -->
+    <div id="login-page" class="login-container">
+        <div class="login-header"><div class="logo">✈️🛸📡</div><h1 class="title">智创飞控 · 无人机战略模拟</h1><p class="subtitle">企业战略与竞争情报实训平台</p></div>
+        <div class="login-card" id="login-card">
+            <div id="login-form">
+                <div class="form-group"><label class="form-label">🏷️ 课堂代码</label><input type="text" class="form-input" id="class-code" placeholder="教师提供的课堂ID"></div>
+                <div class="form-group"><label class="form-label">👤 参与者编号（学号）</label><input type="text" class="form-input" id="participant-id" placeholder="学号"></div>
+                <div class="form-row"><div class="form-group"><label>📚 年级/班级</label><input id="participant-grade" class="form-input"></div><div class="form-group"><label>⚧ 性别</label><select id="participant-gender" class="form-select"><option>男</option><option>女</option></select></div></div>
+                <div class="form-row"><div class="form-group"><label>📅 年龄</label><input type="number" id="participant-age" class="form-input"></div><div class="form-group"><label>💼 总工作年限</label><input type="number" id="participant-work-years" class="form-input"></div></div>
+                <div class="form-row"><div class="form-group"><label>🎯 本岗位年限</label><input type="number" id="participant-role-years" class="form-input"></div><div class="form-group"><label>🎲 风险倾向(1-7)</label><input type="range" id="participant-risk" min="1" max="7" value="4" oninput="document.getElementById('risk-val').innerText=this.value" style="width:100%;"><span id="risk-val">4</span></div></div>
+                <div class="form-row"><div class="form-group"><label>🏢 团队代码</label><input id="login-teamcode" class="form-input"></div><div class="form-group"><label>🔑 密码</label><input type="password" id="login-password" class="form-input"></div></div>
+                <div class="form-group"><label>👔 角色</label><select id="login-role" class="form-select"><option value="CEO">👑 CEO</option><option value="CIO">🔍 CIO</option><option value="COO">⚙️ COO</option><option value="CFO">💰 CFO</option><option value="CMO">📢 CMO</option><option value="HR">👥 HR</option></select></div>
+                <button class="btn btn-primary btn-block" id="studentLoginBtn">▶ 进入实验</button>
+                <button class="btn btn-secondary btn-block" id="showRegisterBtn">📝 注册新团队</button>
+                <button class="btn btn-secondary btn-block" id="showTeacherBtn">👨‍🏫 教师入口</button>
+                <button class="btn btn-secondary btn-block" id="showHelpBtn">📖 实验说明</button>
+            </div>
+            <div id="register-form" class="register-form" style="display:none;">
+                <h3>📝 注册新团队</h3>
+                <div class="form-group"><label>课堂代码</label><input id="reg-class-code" class="form-input"></div>
+                <div class="form-group"><label>团队名称</label><input id="reg-teamname" class="form-input"></div>
+                <div class="form-group"><label>团队代码</label><input id="reg-teamcode" class="form-input"></div>
+                <div class="form-group"><label>密码</label><input type="password" id="reg-password" class="form-input"></div>
+                <div class="form-group"><label>确认密码</label><input type="password" id="reg-password2" class="form-input"></div>
+                <div class="form-group"><label>年级/班级</label><input id="reg-grade" class="form-input"></div>
+                <div class="form-row"><div><label>性别</label><select id="reg-gender" class="form-select"><option>男</option><option>女</option></select></div><div><label>年龄</label><input type="number" id="reg-age" class="form-input"></div></div>
+                <div class="form-row"><div><label>总工作年限</label><input type="number" id="reg-work-years" class="form-input"></div><div><label>本岗位年限</label><input type="number" id="reg-role-years" class="form-input"></div></div>
+                <div class="form-group"><label>公司风险偏好(1-7)</label><input type="range" id="reg-risk" min="1" max="7" value="4" oninput="document.getElementById('reg-risk-val').innerText=this.value"><span id="reg-risk-val">4</span></div>
+                <button class="btn btn-primary btn-block" id="confirmRegisterBtn">✅ 确认注册</button>
+                <button class="btn btn-secondary btn-block" onclick="backToLogin()">← 返回</button>
+            </div>
+            <div id="teacher-form" class="teacher-form" style="display:none;">
+                <h3>👨‍🏫 教师登录</h3>
+                <div class="form-group"><label>教师账号</label><input id="teacher-username" class="form-input"></div>
+                <div class="form-group"><label>密码</label><input type="password" id="teacher-pwd" class="form-input"></div>
+                <button class="btn btn-primary btn-block" id="teacherLoginBtn">登录</button>
+                <button class="btn btn-secondary btn-block" id="teacherRegisterBtn">注册新教师</button>
+                <button class="btn btn-secondary btn-block" onclick="backToLogin()">返回</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 学生主应用（右上角始终显示角色） -->
+    <div id="app-container" class="app-container" style="display:none;">
+        <div class="top-nav">
+            <div><span class="company-name" id="display-teamname"></span> <span class="quarter-info" id="display-quarter"></span></div>
+            <div><span class="role-badge" id="display-role"></span> <button class="btn btn-secondary btn-small" onclick="logout()">退出</button></div>
+        </div>
+        <div class="content">
+            <div class="story-container"><div class="story-title">📖 创业日志 · 智创飞控 <span id="story-chapter"></span><span class="help-icon" id="inGameHelpBtn" style="background:#667eea; border-radius:50%; width:24px; display:inline-block; text-align:center; cursor:pointer;">?</span></div><div id="story-content"></div><div class="industry-panel"><div class="industry-title">📊 行业情报 & 竞争动态</div><div id="industry-update"></div></div></div>
+            <div id="dashboard-page" class="page active">
+                <div class="dashboard-grid">
+                    <div class="card"><div class="card-header">💰 财务</div><div class="metrics-grid"><div class="metric-card finance">现金流 ¥<span id="metric-cash"></span></div><div class="metric-card finance">营收 ¥<span id="metric-revenue"></span></div><div class="metric-card finance">利润 ¥<span id="metric-profit"></span></div><div class="metric-card finance">目标市场 <span id="metric-market"></span></div></div></div>
+                    <div class="card"><div class="card-header">📊 市场</div><div class="metrics-grid"><div class="metric-card market">市占 <span id="metric-share"></span>%</div><div class="metric-card market">品牌 <span id="metric-brand"></span></div><div class="metric-card market">NPS <span id="metric-nps"></span></div><div class="metric-card market">活跃客户 <span id="metric-clients"></span></div></div></div>
+                    <div class="card"><div class="card-header">🔬 运营</div><div class="metrics-grid"><div class="metric-card product">技术等级 <span id="metric-tech"></span>/5</div><div class="metric-card product">AI成熟度 <span id="metric-ai"></span>/5</div><div class="metric-card product">专利 <span id="metric-patent"></span></div><div class="metric-card product">效率 <span id="metric-efficiency"></span>%</div></div></div>
+                    <div class="card"><div class="card-header">👥 组织</div><div class="metrics-grid"><div class="metric-card hr">员工满意 <span id="metric-emp-sat"></span>%</div><div class="metric-card hr">流失率 <span id="metric-turnover"></span>%</div><div class="metric-card intel">情报准确 <span id="metric-intel"></span>%</div><div class="metric-card intel">综合分 <span id="metric-score"></span></div></div></div>
+                </div>
+                <div class="card"><div class="card-header">📰 实时新闻</div><div id="news-feed"></div></div>
+                <div class="card"><div class="card-header">📋 季度复盘</div><div id="feedback-content"></div></div>
+                <div class="card ai-insight"><div class="card-header">🤖 AI前瞻</div><div id="ai-insight-dynamic"></div></div>
+            </div>
+            <div id="decision-page" class="page"><div id="dynamic-decision-areas"></div><div class="card"><div class="card-header">💰 预算</div><div id="budget-summary"></div></div><div class="card"><div class="card-header">🤖 AI建议</div><div id="ai-suggestion"></div></div><button class="btn btn-primary btn-block" id="submitDecisionBtn">✅ 提交季度决策</button><button class="btn btn-secondary btn-block" id="viewCompetitorBtn">🔍 竞争对手情报</button></div>
+            <div id="team-page" class="page">
+                <div class="card"><div class="card-header">🌟 年度评优（年底开放）</div><div id="yearly-rating-panel"></div></div>
+                <div class="card"><div class="card-header">🦅 猎头AI · 明星选手</div><div id="star-player-list"></div></div>
+            </div>
+            <div id="hr-page" class="page"><div class="card"><div class="card-header">🔄 人事变动</div><div id="hr-action-panel"></div><div id="incoming-offers"></div></div></div>
+            <div id="alliance-page" class="page">
+                <div class="card"><div class="card-header">🤝 战略联盟（半年更新一次）</div><div class="rating-note">📌 可在研发、生产、渠道、情报等任意领域与其他团队建立双边或多边联盟。每半年（第2、4季度末）可更新联盟选择。可投资情报查看其他团队优劣势，发送/接收/拒绝联盟意向。</div>
+                <div><button id="intelInvestBtn" class="btn btn-secondary">🔍 投资情报查看各组优劣势（消耗情报预算）</button></div>
+                <div id="intelReport" class="intel-report" style="display:none;"></div>
+                <div id="alliance-panel"></div>
+                <div id="alliance-requests-panel" class="card" style="margin-top:15px;"><div class="card-header">📨 收到的联盟意向</div><div id="incoming-alliance-requests"></div></div>
+                </div>
+            </div>
+            <div id="ranking-page" class="page"><div class="card"><div class="card-header">🏆 排行榜</div><div id="ranking-list"></div></div></div>
+            <div id="history-page" class="page"><div class="card"><div class="card-header">📜 决策档案</div><div id="history-list"></div></div></div>
+        </div>
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchPage('dashboard', this)">📊仪表</div>
+            <div class="nav-item" onclick="switchPage('decision', this)">🎯决策</div>
+            <div class="nav-item" onclick="switchPage('team', this)">🌟评优</div>
+            <div class="nav-item" onclick="switchPage('hr', this)">🔄人事</div>
+            <div class="nav-item" onclick="switchPage('alliance', this)">🤝联盟</div>
+            <div class="nav-item" onclick="switchPage('ranking', this)">🏆排行</div>
+            <div class="nav-item" onclick="switchPage('history', this)">📜档案</div>
+        </div>
+    </div>
+
+    <!-- 教师控制台 -->
+    <div id="teacher-container" class="app-container" style="display:none;">
+        <div class="top-nav"><div>👨‍🏫 教师控制台 <span id="teacher-quarter"></span></div><div><button class="btn btn-secondary" onclick="logout()">退出</button></div></div>
+        <div class="content">
+            <div class="card"><div class="card-header">🎮 课堂控制</div><div id="teacher-class-panel"></div><div class="teacher-panel"><button id="advanceQuarterBtn" class="btn btn-primary">⏩ 推进季度</button> <button id="toggleLockBtn" class="btn btn-warning">🔒 锁定/解锁</button> <button id="resetClassBtn" class="btn btn-danger">🔄 重置</button> <button id="exportJsonBtn" class="btn btn-secondary">📥 JSON</button> <button id="exportCsvBtn" class="btn btn-secondary">📊 CSV</button> <button id="exportAllCsvBtn" class="btn btn-secondary">📦 导出全部数据</button> <button id="randomEventBtn" class="btn btn-secondary">🎲 事件</button></div><div><span id="lock-status"></span> 提交率: <span id="submit-rate"></span>/<span id="total-members"></span></div><div class="ai-insight"><div class="card-header">📈 隐藏日志</div><textarea id="hidden-log" rows="3" readonly style="width:100%;"></textarea><button id="exportLogsBtn" class="btn btn-secondary">导出日志</button></div><div class="card"><div class="card-header">🔍 评分汇总</div><div id="teacher-rating-summary"></div></div><div id="admin-panel" style="display:none;"><div class="card-header">🔧 超级管理员</div><div id="admin-teacher-list"></div><button id="resetAllTeachersBtn" class="btn btn-danger">重置所有教师</button></div></div>
+            <div class="card"><div class="card-header">👥 团队管理（名称/密码/成员）</div><div id="teacher-team-detail"></div></div>
+            <div class="card"><div class="card-header">🏆 团队排名</div><div id="teacher-ranking"></div></div>
+            <div class="card"><div class="card-header">📋 历史决策记录</div><div style="margin-bottom:10px;"><select id="history-filter-team" class="form-select" style="display:inline-block;width:auto;margin-right:8px;"><option value="">全部团队</option></select><select id="history-filter-quarter" class="form-select" style="display:inline-block;width:auto;margin-right:8px;"><option value="">全部季度</option></select><button class="btn btn-primary" id="loadHistoryBtn" style="padding:8px 16px;font-size:14px;">查询</button></div><div id="teacher-history-panel" style="max-height:400px;overflow-y:auto;"></div></div>
+            <div class="card"><div class="card-header">📡 广播</div><textarea id="broadcast-msg" rows="2" style="width:100%;"></textarea><button id="sendBroadcastBtn" class="btn btn-primary">发送</button></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <div id="news-popup" class="news-popup" onclick="closeNews()"><div id="news-title"></div><div id="news-content"></div><div id="news-time"></div></div>
+
+    <script src="api.js"></script>
+    <script>
+        // ===== Session state (populated from API responses) =====
+        let currentClass = null, currentUser = null, currentTeam = null, isTeacher = false, currentTeacher = null;
+        let gameState = { year: 1, quarter: 1, locked: false };
+        let pollingInterval = null;
+
+        // ===== Utility functions (no localStorage) =====
+        function formatNumber(n) { if(n>=10000) return (n/10000).toFixed(1)+'万'; return n.toLocaleString(); }
+        function showToast(msg) { let t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+        function closeNews() { document.getElementById('news-popup').classList.remove('show'); }
+        function closeStoryModal() { document.getElementById('story-modal').style.display = 'none'; }
+
+        // ===== Help modal =====
+        function showHelpModal() {
+            let modal = document.createElement('div'); modal.className = 'modal-mask';
+            modal.innerHTML = `<div class="help-modal"><h2>📖 实验详细说明书</h2>
+            <h3>一、角色与决策</h3>
+            <p>每位参与者扮演一个角色（CEO/CIO/COO/CFO/CMO/HR），每个季度需要完成各自领域的5项以上战略决策。所有决策汇总后将影响公司的财务、市场、技术、组织等指标。</p>
+            <h3>二、教师控制与课堂</h3>
+            <p>教师可以创建多个课堂，每个课堂数据独立。教师可以推进季度、锁定/解锁学生决策、导出实验数据（JSON/CSV）用于分析。</p>
+            <h3>三、个人固定信息与风险偏好</h3>
+            <p><strong>固定信息</strong>（学号、年级、性别、年龄、总工作年限、本岗位年限）仅在首次注册时填写，之后登录无需重复。总工作年限会随时间自动增长，本岗位年限在角色变更时重置为1。<strong>风险倾向</strong>每季度需要重新填写，用于影响决策风格和系统自动评分。</p>
+            <h3>四、组内评优（每年一次）</h3>
+            <p>每年第4季度结束后（即下一年第1季度初），组内成员可以对其他成员进行两种评分：<br>
+            - <strong>公开评分</strong>：所有人可见，年底统一公布。<br>
+            - <strong>悄悄评分</strong>：仅评分人自己可见，永久保密，不会在任何地方公开。<br>
+            - <strong>系统自动评分</strong>：系统根据全年决策参与度（决策次数）和风险倾向自动生成，年底公布。<br>
+            教师可以查看所有评分（包括悄悄分），但学生之间只知道公开分和系统分。</p>
+            <h3>五、人事变动</h3>
+            <p><strong>裁员</strong>：CEO或HR可发起裁员，需支付N+2补偿（N=工作年限）。<br>
+            <strong>挖人</strong>：可向其他团队成员发送橄榄枝，需要支付猎头费（5万元），对方同意后即可加入本方团队，保留原有工作年限，本岗位年限重置为1。<br>
+            <strong>猎头AI</strong>：系统每季度推荐明星选手（其他团队决策活跃度高的成员）。</p>
+            <h3>六、联盟系统</h3>
+            <p>每半年（第2、4季度末）可以更新联盟关系。联盟可以建立在<strong>研发、生产、渠道、情报</strong>任意领域，支持双边或多边联盟。<br>
+            - <strong>投资情报</strong>：消耗情报预算（占用CIO预算），可以查看所有其他团队的各项指标（优劣势），便于选择盟友。<br>
+            - <strong>发送联盟意向</strong>：可以向任意团队发送联盟请求，注明领域和类型。对方收到后可选择接受、拒绝或不回应。<br>
+            - <strong>联盟评分</strong>：与人事评分类似，每半年可以对盟友进行公开/非公开/系统评分，用于评估合作效果。联盟评分同样遵循公开分全班可见、非公开分仅当事人可见、系统分自动计算的原则。<br>
+            - 联盟建立后，会在联盟页面展示，直到下次更新窗口可以选择续签、停止或更换。</p>
+            <h3>七、竞争情报</h3>
+            <p>CIO角色可以投入情报预算提升情报准确率，从而获得更精准的市场预测和对手动态。所有角色都可以查看竞争对手的简要数据。</p>
+            <h3>八、产量与销售</h3>
+            <p>COO负责设定每季度产量，结合CMO的营销预算、定价、品牌等因素，决定实际销售量，影响公司营收和利润。</p>
+            <h3>九、数据隐私</h3>
+            <p>所有学生决策、评分、人事变动均被记录，教师可随时导出。悄悄评分仅教师和评分人可见，永远不会向其他学生公开。</p>
+            <button class="btn btn-primary" style="margin-top:15px;" onclick="this.parentElement.parentElement.remove()">关闭</button></div>`;
+            document.body.appendChild(modal);
+        }
+
+        // ===== Story content =====
+        const storyContent = {
+            1:{ title:"🌱 启航 · 深圳南山", content:"2024年春天，你和早期团队在南山区科技园一间能看见深圳湾的办公室里，敲下了飞控代码的第一行。窗外是大疆总部，竞争对手近在咫尺。你们只有25人，但个个都是精兵强将。首款产品'天枢M300'农业无人机即将下线，你们需要决定：先攻大田作物市场，还是尝试电力巡检？每一个深夜的争论都关系着公司的生死。", industry:"【行业动态】农业部新出台无人机购置补贴政策，河南、山东等农业大省需求旺盛。大疆发布T60农业无人机，载重提升至50kg。"},
+            2:{ title:"⚔️ 卡位战 · 狭路相逢", content:"第一批天枢M300交付后，客户反馈续航时间比预期短了3分钟。与此同时，极飞科技在黑龙江举行了大规模路演。团队连夜优化飞控算法，终于将续航提升到标称值。市场部传来消息：有电力公司对你们的E6巡检无人机感兴趣，但要求提供AI缺陷识别算法。", industry:"【竞争情报】大疆Mavic 3E行业版降价15%，中小企业压力剧增。纵横股份推出固定翼无人机新品。"},
+            3:{ title:"💡 技术突围 · 自研飞控", content:"经过三个月的封闭开发，你们成功研发出第二代飞控系统「天枢OS」，融合视觉SLAM和RTK定位，避障算法达到行业领先水平。专利墙增加了5项核心发明专利。CTO在行业峰会上演讲后，多家投资机构主动联系。", industry:"【技术前沿】AI飞控+5G远程驾驶成为新趋势，华为推出无人机专用通信模组。"},
+            4:{ title:"🌊 乘风破浪 · A轮融资", content:"公司启动A轮融资，红杉中国和高瓴创投都表达了兴趣。但尽调发现你们的供应链比较单一，电机依赖一家供应商。COO前往东莞洽谈新的电机合作伙伴，终于解决了卡脖子问题。", industry:"【融资环境】硬科技融资热潮，低空经济被写入地方政府工作报告。"},
+            5:{ title:"⚡ 风暴中求生 · 价格战", content:"大疆宣布全系工业无人机降价20%，行业迎来洗牌。你们的市占率受到挤压，现金流变得紧张。CEO决定裁撤部分非核心岗位，同时加大出海力度。泰国农业市场传来好消息。", industry:"【市场预警】两家小型无人机公司宣布破产，行业集中度进一步提高。"},
+            6:{ title:"🤝 战略联盟 · 生态共建", content:"你们与一家农业物联网公司达成战略合作，共同推出'无人机+墒情监测'一体化方案。同时加入了低空经济产业联盟，与多家企业共同制定行业标准。", industry:"【合作趋势】产业联盟估值溢价明显，平台型企业受追捧。"},
+            7:{ title:"🚀 引领变革 · 行业标杆", content:"你们的飞控系统被多家OEM厂商采用，成为事实上的标准之一。公司获评国家级专精特新'小巨人'企业，品牌价值跃升。", industry:"【行业地位】智创飞控已成为工业无人机领域不可忽视的力量。"},
+            8:{ title:"🏆 登顶时刻 · 新的征程", content:"公司成功进入行业第一梯队，市占率突破15%。但新的挑战来了：eVTOL飞行汽车开始量产，可能会分流无人机投资和技术人才。董事会决定提前布局城市空中交通。", industry:"【前瞻】AI+无人机+空管系统，新一轮竞赛已经开始。"}
+        };
+        function updateStory(q) { let chap=Math.min(8,Math.max(1,Math.ceil(q/1))); let s=storyContent[chap]; if(s){ document.getElementById('story-content').innerHTML=`<p>${s.content}</p>`; document.getElementById('industry-update').innerHTML=s.industry; document.getElementById('story-chapter').innerHTML=`${chap}/8 · ${s.title}`; } }
+
+        // ===== News popup =====
+        function showNews(title, content) {
+            let p = document.getElementById('news-popup');
+            document.getElementById('news-title').innerHTML = title;
+            document.getElementById('news-content').innerHTML = content;
+            document.getElementById('news-time').innerHTML = new Date().toLocaleTimeString();
+            p.classList.add('show');
+            setTimeout(() => p.classList.remove('show'), 7000);
+        }
+
+        // ===== Navigation =====
+        function switchPage(p, el) {
+            document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+            document.getElementById(`${p}-page`).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            if(el) el.classList.add('active');
+            if(p === 'ranking') loadRankings();
+            if(p === 'history') loadHistory();
+            if(p === 'team') refreshYearlyRatingPanel();
+            if(p === 'hr') loadTeamAndHRExtended();
+            if(p === 'alliance') refreshAlliancePanel();
+        }
+
+        // ===== Teacher login/register =====
+        function showTeacherRegister() {
+            let html = `<h3>注册教师</h3><div class="form-group"><label>用户名</label><input id="new-teacher-user" class="form-input"></div><div class="form-group"><label>密码</label><input id="new-teacher-pwd" type="password" class="form-input"></div><div class="form-group"><label>确认</label><input id="new-teacher-pwd2" type="password" class="form-input"></div><button class="btn btn-primary btn-block" id="confirm-reg-teacher">注册</button><button class="btn btn-secondary btn-block" onclick="backToLogin()">返回</button>`;
+            document.getElementById('login-card').innerHTML = html;
+            document.getElementById('confirm-reg-teacher').onclick = async () => {
+                let u = document.getElementById('new-teacher-user').value.trim();
+                let p = document.getElementById('new-teacher-pwd').value;
+                let p2 = document.getElementById('new-teacher-pwd2').value;
+                if(!u || !p || p !== p2) { showToast("信息有误"); return; }
+                try {
+                    await API.teacherRegister(u, p);
+                    showToast("注册成功");
+                    backToLogin();
+                } catch(e) { showToast(e.message); }
+            };
+        }
+
+        async function teacherLogin() {
+            let u = document.getElementById('teacher-username').value.trim();
+            let p = document.getElementById('teacher-pwd').value;
+            if(!u || !p) { showToast("请填写完整"); return; }
+            try {
+                let data = await API.teacherLogin(u, p);
+                currentTeacher = data.teacher;
+                isTeacher = true;
+                showTeacherClassList();
+            } catch(e) { showToast(e.message || "账号或密码错误"); }
+        }
+
+        async function showTeacherClassList() {
+            try {
+                let classes = await API.getClassrooms();
+                let html = `<div><strong>我的课堂</strong><div class="teacher-class-list">`;
+                for(let c of classes) html += `<button class="btn btn-secondary" onclick="selectTeacherClass('${c.id}')">${c.name} (${c.id})</button>`;
+                html += `</div><div class="form-row"><div class="form-group"><input id="new-class-id" placeholder="新课堂ID" class="form-input"></div><div class="form-group"><input id="new-class-name" placeholder="名称" class="form-input"></div></div><button class="btn btn-primary btn-block" id="create-class-btn">创建课堂</button><button class="btn btn-secondary btn-block" onclick="backToLogin()">返回</button></div>`;
+                document.getElementById('login-card').innerHTML = html;
+                document.getElementById('create-class-btn').onclick = async () => {
+                    let nid = document.getElementById('new-class-id').value.trim();
+                    let nname = document.getElementById('new-class-name').value.trim();
+                    if(!nid || !nname) { showToast("请填写完整"); return; }
+                    try {
+                        await API.createClassroom(nid, nname);
+                        selectTeacherClass(nid);
+                    } catch(e) { showToast(e.message); }
+                };
+            } catch(e) { showToast(e.message); }
+        }
+
+        async function selectTeacherClass(cid) {
+            currentClass = cid;
+            isTeacher = true;
+            enterTeacherApp();
+        }
+
+        // ===== Student register/login =====
+        async function registerTeam() {
+            let classCode = document.getElementById('reg-class-code').value.trim();
+            let name = document.getElementById('reg-teamname').value.trim();
+            let code = document.getElementById('reg-teamcode').value.trim();
+            let pwd = document.getElementById('reg-password').value;
+            let pwd2 = document.getElementById('reg-password2').value;
+            if(!classCode || !name || !code || !pwd || pwd !== pwd2) { showToast('信息有误'); return; }
+            try {
+                await API.registerTeam(classCode, name, code, pwd);
+                showToast('注册成功，请登录');
+                backToLogin();
+            } catch(e) { showToast(e.message); }
+        }
+
+        async function studentLogin() {
+            let classCode = document.getElementById('class-code').value.trim();
+            let pid = document.getElementById('participant-id').value.trim();
+            let grade = document.getElementById('participant-grade').value;
+            let gender = document.getElementById('participant-gender').value;
+            let age = document.getElementById('participant-age').value;
+            let workYears = document.getElementById('participant-work-years').value;
+            let roleYears = document.getElementById('participant-role-years').value;
+            let teamCode = document.getElementById('login-teamcode').value.trim();
+            let pwd = document.getElementById('login-password').value;
+            let role = document.getElementById('login-role').value;
+            if(!classCode || !pid || !teamCode || !pwd) { showToast('请填写完整'); return; }
+            try {
+                let data = await API.studentLogin({
+                    classroom_id: classCode,
+                    student_id: pid,
+                    grade, gender, age,
+                    work_years: parseInt(workYears) || 0,
+                    role_years: parseInt(roleYears) || 0,
+                    team_code: teamCode,
+                    password: pwd,
+                    role
+                });
+                currentClass = classCode;
+                currentUser = data.participant;
+                currentTeam = data.team;
+                gameState = data.gameState || gameState;
+                isTeacher = false;
+
+                // Prompt for risk preference each quarter
+                let riskVal = await showRiskModal();
+                if(riskVal !== null) {
+                    await API.updateRisk(riskVal).catch(() => {});
+                }
+
+                showToast(`欢迎 ${currentTeam.name} - ${currentUser.role}`);
+                enterApp();
+            } catch(e) { showToast(e.message || '登录失败'); }
+        }
+
+        function showRiskModal() {
+            return new Promise((resolve) => {
+                let modalDiv = document.createElement('div');
+                modalDiv.className = 'modal-mask';
+                modalDiv.innerHTML = `<div style="background:white; border-radius:28px; padding:28px;"><h3>🎯 本季度个人风险倾向</h3><input type="range" id="modal-risk" min="1" max="7" value="4" style="width:100%; margin:20px 0;"><div>当前值: <span id="modal-risk-val">4</span></div><button class="btn btn-primary" id="confirm-risk">确认</button></div>`;
+                document.body.appendChild(modalDiv);
+                let slider = modalDiv.querySelector('#modal-risk');
+                let valSpan = modalDiv.querySelector('#modal-risk-val');
+                slider.addEventListener('input', () => { valSpan.innerText = slider.value; });
+                modalDiv.querySelector('#confirm-risk').onclick = () => {
+                    let val = parseInt(slider.value);
+                    document.body.removeChild(modalDiv);
+                    resolve(val);
+                };
+            });
+        }
+
+        // ===== Logout =====
+        async function logout() {
+            await API.logout();
+            location.reload();
+        }
+
+        function backToLogin() { location.reload(); }
+
+        // ===== Enter app views =====
+        function enterApp() {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+            document.getElementById('display-teamname').textContent = currentTeam.name;
+            document.getElementById('display-role').textContent = currentUser.role;
+            document.getElementById('display-quarter').textContent = `${gameState.year}年 Q${gameState.quarter}`;
+            updateDashboard();
+            setupDecisionUI();
+            refreshYearlyRatingPanel();
+            refreshAlliancePanel();
+            updateStory(gameState.quarter);
+            pollingInterval = setInterval(() => updateDashboard(), 5000);
+        }
+
+        function enterTeacherApp() {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('teacher-container').style.display = 'block';
+            updateTeacherDashboard();
+            if(currentTeacher && currentTeacher.is_admin) {
+                document.getElementById('admin-panel').style.display = 'block';
+                loadAdminPanel();
+            }
+            pollingInterval = setInterval(() => { if(isTeacher) updateTeacherDashboard(); }, 5000);
+        }
+
+        // ===== Decision UI =====
+        function setupDecisionUI() {
+            let role = currentUser.role;
+            let html = `<div class="card"><div class="card-header">${role} 战略决策</div>`;
+            if(role === 'CEO') html += `<div class="decision-row"><label>目标市场</label><select id="ceo-market" class="form-select"><option value="domestic">国内</option><option value="sea">东南亚</option></select></div><div class="decision-row"><label>竞争战略</label><select id="ceo-strategy" class="form-select"><option value="cost">成本领先</option><option value="diff">差异化</option></select></div><div class="decision-row"><label>扩张强度</label><input type="range" id="ceo-expand" min="0" max="100" value="50"></div><div class="decision-row"><label>联盟投入</label><input type="range" id="ceo-alliance" min="0" max="400000" step="20000" value="100000"></div><div class="decision-row"><label>资本运作</label><select id="ceo-capital" class="form-select"><option value="none">无</option><option value="angel">天使轮</option></select></div>`;
+            else if(role === 'CIO') html += `<div class="decision-row"><label>情报预算</label><input type="range" id="cio-budget" min="0" max="300000" value="80000"></div><div class="decision-row"><label>情报方向</label><select id="cio-focus" class="form-select"><option>竞争对手</option><option>政策</option></select></div><div class="decision-row"><label>分析深度</label><input type="range" id="cio-depth" min="1" max="5" value="3"></div><div class="decision-row"><label>反情报投入</label><input type="range" id="cio-counter" min="0" max="100" value="40"></div><div class="decision-row"><label>法务监测</label><input type="range" id="cio-legal" min="0" max="100" value="30"></div>`;
+            else if(role === 'COO') html += `<div class="decision-row"><label>AI研发</label><input type="range" id="coo-ai" min="0" max="700000" value="180000"></div><div class="decision-row"><label>自动化</label><input type="range" id="coo-auto" min="0" max="400000" value="100000"></div><div class="decision-row"><label>专利</label><select id="coo-patent" class="form-select"><option>0</option><option>1</option></select></div><div class="decision-row"><label>供应链</label><input type="range" id="coo-supply" min="0" max="250000" value="50000"></div><div class="decision-row"><label>产能扩张</label><input type="range" id="coo-capacity" min="0" max="80" value="20"></div><div class="decision-row"><label>产量(架)</label><input type="range" id="coo-production" min="0" max="2000" step="50" value="600"><span id="prod-val">600</span></div>`;
+            else if(role === 'CFO') html += `<div class="decision-row"><label>额外融资</label><input type="range" id="cfo-fund" min="0" max="1000000" value="200000"></div><div class="decision-row"><label>成本控制</label><input type="range" id="cfo-control" min="0" max="30" value="10"></div><div class="decision-row"><label>财务杠杆</label><input type="range" id="cfo-leverage" min="0" max="100" value="30"></div><div class="decision-row"><label>股利</label><input type="range" id="cfo-dividend" min="0" max="20" value="0"></div><div class="decision-row"><label>ESG投资</label><input type="range" id="cfo-esg" min="0" max="200000" value="50000"></div>`;
+            else if(role === 'CMO') html += `<div class="decision-row"><label>营销预算</label><input type="range" id="cmo-budget" min="0" max="600000" value="150000"></div><div class="decision-row"><label>定价(万元)</label><input type="range" id="cmo-price" min="3" max="12" step="0.5" value="4.8"></div><div class="decision-row"><label>渠道</label><input type="range" id="cmo-channels" min="0" max="300000" value="80000"></div><div class="decision-row"><label>品牌强度</label><input type="range" id="cmo-brand" min="0" max="100" value="50"></div><div class="decision-row"><label>促销</label><input type="range" id="cmo-promo" min="0" max="100" value="40"></div>`;
+            else if(role === 'HR') html += `<div class="decision-row"><label>招聘</label><input type="range" id="hr-recruit" min="0" max="20" value="5"></div><div class="decision-row"><label>培训</label><input type="range" id="hr-training" min="0" max="200000" value="60000"></div><div class="decision-row"><label>薪酬策略</label><select id="hr-salary" class="form-select"><option>市场水平</option><option>高于市场20%</option></select></div><div class="decision-row"><label>股权激励%</label><input type="range" id="hr-equity" min="0" max="10" value="3"></div><div class="decision-row"><label>文化投入</label><input type="range" id="hr-culture" min="0" max="150000" value="30000"></div>`;
+            html += `</div>`;
+            document.getElementById('dynamic-decision-areas').innerHTML = html;
+            attachSliderEvents();
+            updateBudget();
+        }
+
+        function attachSliderEvents() {
+            document.querySelectorAll('.slider, input[type=range]').forEach(s => {
+                s.addEventListener('input', () => {
+                    updateBudget();
+                    if(s.id === 'coo-production') document.getElementById('prod-val').innerText = s.value;
+                });
+            });
+        }
+
+        function updateBudget() {
+            let total = 0;
+            document.querySelectorAll('#dynamic-decision-areas input[type=range]').forEach(inp => { total += parseInt(inp.value) || 0; });
+            let cash = currentTeam ? currentTeam.cash : 0;
+            let rem = cash - total;
+            document.getElementById('budget-summary').innerHTML = `预算 ¥${formatNumber(total)} | 剩余 ¥${formatNumber(rem)}`;
+            document.getElementById('ai-suggestion').innerHTML = `🤖 AI建议：联盟可以降低研发成本，建议积极寻找伙伴。`;
+        }
+
+        // ===== Submit Decision =====
+        async function submitDecision() {
+            if(gameState.locked) { showToast("教师已锁定"); return; }
+            let role = currentUser.role;
+            let decisions = {};
+            if(role === 'CEO') decisions = { market: document.getElementById('ceo-market')?.value, strategy: document.getElementById('ceo-strategy')?.value, expansion: parseInt(document.getElementById('ceo-expand')?.value), alliance: parseInt(document.getElementById('ceo-alliance')?.value), capital: document.getElementById('ceo-capital')?.value };
+            else if(role === 'CIO') decisions = { budget: parseInt(document.getElementById('cio-budget')?.value), focus: document.getElementById('cio-focus')?.value, depth: parseInt(document.getElementById('cio-depth')?.value), counter: parseInt(document.getElementById('cio-counter')?.value), legalRisk: parseInt(document.getElementById('cio-legal')?.value) };
+            else if(role === 'COO') decisions = { ai: parseInt(document.getElementById('coo-ai')?.value), auto: parseInt(document.getElementById('coo-auto')?.value), patent: parseInt(document.getElementById('coo-patent')?.value), supply: parseInt(document.getElementById('coo-supply')?.value), capacity: parseInt(document.getElementById('coo-capacity')?.value), production: parseInt(document.getElementById('coo-production')?.value) };
+            else if(role === 'CFO') decisions = { fund: parseInt(document.getElementById('cfo-fund')?.value), control: parseInt(document.getElementById('cfo-control')?.value), leverage: parseInt(document.getElementById('cfo-leverage')?.value), dividend: parseInt(document.getElementById('cfo-dividend')?.value), esg: parseInt(document.getElementById('cfo-esg')?.value) };
+            else if(role === 'CMO') decisions = { budget: parseInt(document.getElementById('cmo-budget')?.value), price: parseFloat(document.getElementById('cmo-price')?.value), channels: parseInt(document.getElementById('cmo-channels')?.value), branding: parseInt(document.getElementById('cmo-brand')?.value), promo: parseInt(document.getElementById('cmo-promo')?.value) };
+            else if(role === 'HR') decisions = { recruit: parseInt(document.getElementById('hr-recruit')?.value), training: parseInt(document.getElementById('hr-training')?.value), salary: document.getElementById('hr-salary')?.value, equity: parseInt(document.getElementById('hr-equity')?.value), culture: parseInt(document.getElementById('hr-culture')?.value) };
+            try {
+                await API.submitDecision(decisions);
+                showToast("决策已提交");
+            } catch(e) { showToast(e.message || "提交失败"); }
+        }
+
+        // ===== Dashboard update (student) =====
+        async function updateDashboard() {
+            try {
+                let detail = await API.getClassroomDetail(currentClass);
+                let teams = detail.teams || [];
+                let t = teams.find(tm => tm.id === currentTeam.id) || currentTeam;
+                currentTeam = t;
+                gameState = detail.gameState || gameState;
+
+                document.getElementById('display-quarter').textContent = `${gameState.year}年 Q${gameState.quarter}`;
+                document.getElementById('metric-cash').innerHTML = formatNumber(t.cash || 0);
+                document.getElementById('metric-revenue').innerHTML = formatNumber(t.revenue || 0);
+                document.getElementById('metric-profit').innerHTML = formatNumber(t.profit || 0);
+                document.getElementById('metric-market').innerHTML = t.targetMarket || 'domestic';
+                document.getElementById('metric-share').innerHTML = (t.marketShare || 0).toFixed(1);
+                document.getElementById('metric-brand').innerHTML = t.brand || 0;
+                document.getElementById('metric-nps').innerHTML = t.nps || '-';
+                document.getElementById('metric-clients').innerHTML = t.activeClients || 0;
+                document.getElementById('metric-tech').innerHTML = (t.techLevel || 0).toFixed(1);
+                document.getElementById('metric-ai').innerHTML = (t.aiMaturity || 0).toFixed(1);
+                document.getElementById('metric-patent').innerHTML = t.patents || 0;
+                document.getElementById('metric-efficiency').innerHTML = t.efficiency || 0;
+                document.getElementById('metric-emp-sat').innerHTML = t.employeeSat || 0;
+                document.getElementById('metric-turnover').innerHTML = t.turnover || 0;
+                document.getElementById('metric-intel').innerHTML = t.intelAccuracy || 0;
+                document.getElementById('metric-score').innerHTML = (t.score || 0).toFixed(1);
+
+                // News
+                let news = detail.news || [];
+                document.getElementById('news-feed').innerHTML = news.slice(0, 5).map(n => `<div>📢 ${n.title} — ${n.content}</div>`).join('') || '暂无新闻';
+
+                // Feedback from last result
+                let results = detail.results || [];
+                let myResults = results.filter(r => r.team_id === currentTeam.id);
+                let last = myResults[myResults.length - 1];
+                if(last) document.getElementById('feedback-content').innerHTML = last.feedback || '';
+
+                document.getElementById('ai-insight-dynamic').innerHTML = `🧠 猎头AI推荐更新。联盟可提升研发效率15%。`;
+                updateStory(gameState.quarter);
+            } catch(e) {
+                // silently fail on polling errors
+            }
+        }
+
+        // ===== Teacher dashboard =====
+        async function updateTeacherDashboard() {
+            try {
+                let detail = await API.getClassroomDetail(currentClass);
+                let state = await API.getGameState(currentClass);
+                gameState = state || detail.gameState || gameState;
+                let teams = detail.teams || [];
+                let participants = detail.participants || [];
+
+                document.getElementById('teacher-quarter').innerHTML = `${gameState.year}年 Q${gameState.quarter}`;
+                document.getElementById('lock-status').innerHTML = gameState.locked ? "🔒锁定" : "🔓开放";
+                document.getElementById('submit-rate').innerText = gameState.submittedThisQuarter || 0;
+                document.getElementById('total-members').innerText = participants.length || 0;
+
+                let ranks = [...teams].sort((a, b) => (b.score || 0) - (a.score || 0));
+                document.getElementById('teacher-ranking').innerHTML = ranks.map(t => `<div>🏅 ${t.name} 评分${(t.score || 0).toFixed(1)}</div>`).join('');
+
+                // Team detail panel
+                let teamDetailHtml = '<table style="width:100%;border-collapse:collapse;font-size:14px;"><tr style="background:#1c6e6e;color:white;"><th style="padding:10px;border-radius:8px 0 0 0;">团队</th><th style="padding:10px;">代码</th><th style="padding:10px;">密码</th><th style="padding:10px;">资金</th><th style="padding:10px;border-radius:0 8px 0 0;">成员</th></tr>';
+                for(let t of teams) {
+                    let members = participants.filter(p => p.team_id === t.id);
+                    let memberStr = members.length > 0 ? members.map(m => `${m.student_id}(${m.role})`).join('、') : '<span style="color:#999;">暂无</span>';
+                    teamDetailHtml += `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px;font-weight:bold;">${t.name}</td><td style="padding:10px;font-family:monospace;">${t.code}</td><td style="padding:10px;font-family:monospace;">${t.password}</td><td style="padding:10px;">¥${formatNumber(t.cash)}</td><td style="padding:10px;font-size:12px;">${memberStr}</td></tr>`;
+                }
+                teamDetailHtml += '</table>';
+                if(teams.length === 0) teamDetailHtml = '<div style="color:#999;padding:10px;">暂无团队，等待学生注册</div>';
+                document.getElementById('teacher-team-detail').innerHTML = teamDetailHtml;
+
+                // Logs
+                try {
+                    let logs = await API.getLogs(currentClass);
+                    let hidden = (logs || []).slice(0, 15).map(l => `[${(l.created_at || '').slice(5, 16)}] ${l.message || l.msg || ''}`).join('\n');
+                    if(document.getElementById('hidden-log')) document.getElementById('hidden-log').value = hidden;
+                } catch(e) {}
+
+                // Ratings
+                try {
+                    let ratings = await API.getClassRatings(currentClass);
+                    let ratingHtml = (ratings || []).slice(0, 20).map(r => `${r.from_id}→${r.to_id}[${r.type}]:${r.score}`).join('<br>');
+                    document.getElementById('teacher-rating-summary').innerHTML = ratingHtml || "暂无";
+                } catch(e) {}
+
+                // Populate history filters (always refresh to catch new teams)
+                let teamSelect = document.getElementById('history-filter-team');
+                if(teamSelect) {
+                    let currentVal = teamSelect.value;
+                    teamSelect.innerHTML = '<option value="">全部团队</option>';
+                    for(let t of teams) {
+                        let opt = document.createElement('option');
+                        opt.value = t.id;
+                        opt.textContent = t.name;
+                        teamSelect.appendChild(opt);
+                    }
+                    teamSelect.value = currentVal;
+                }
+                let quarterSelect = document.getElementById('history-filter-quarter');
+                if(quarterSelect) {
+                    let currentVal = quarterSelect.value;
+                    quarterSelect.innerHTML = '<option value="">全部季度</option>';
+                    for(let y = 1; y <= gameState.year; y++) {
+                        let maxQ = (y === gameState.year) ? gameState.quarter : 4;
+                        for(let q = 1; q <= maxQ; q++) {
+                            let opt = document.createElement('option');
+                            opt.value = `${y}-${q}`;
+                            opt.textContent = `第${y}年 Q${q}`;
+                            quarterSelect.appendChild(opt);
+                        }
+                    }
+                    quarterSelect.value = currentVal;
+                }
+
+                // Auto-load history on first dashboard update
+                if(!document.getElementById('teacher-history-panel').dataset.loaded) {
+                    document.getElementById('teacher-history-panel').dataset.loaded = '1';
+                    loadTeacherHistory();
+                }
+            } catch(e) {}
+        }
+
+        // ===== Load history decisions =====
+        async function loadTeacherHistory() {
+            try {
+                let year = null, quarter = null;
+                let qFilter = document.getElementById('history-filter-quarter').value;
+                if(qFilter) { let parts = qFilter.split('-'); year = parts[0]; quarter = parts[1]; }
+
+                let decisions = await API.getClassDecisions(currentClass, year, quarter);
+                let teamFilter = document.getElementById('history-filter-team').value;
+                if(teamFilter) decisions = decisions.filter(d => d.team_id === teamFilter);
+
+                if(!decisions || decisions.length === 0) {
+                    document.getElementById('teacher-history-panel').innerHTML = '<div style="color:#999;padding:10px;">暂无决策记录</div>';
+                    return;
+                }
+
+                let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;"><tr style="background:#2b7c6c;color:white;"><th style="padding:8px;">时间</th><th style="padding:8px;">团队</th><th style="padding:8px;">学号</th><th style="padding:8px;">角色</th><th style="padding:8px;">决策内容</th></tr>';
+                for(let d of decisions) {
+                    let decObj = JSON.parse(d.decisions_json || '{}');
+                    let decSummary = Object.entries(decObj).map(([k,v]) => `${k}:${v}`).join(' | ');
+                    html += `<tr style="border-bottom:1px solid #eee;"><td style="padding:8px;white-space:nowrap;">第${d.year}年Q${d.quarter}</td><td style="padding:8px;">${d.team_name || ''}</td><td style="padding:8px;">${d.student_id || ''}</td><td style="padding:8px;">${d.role}</td><td style="padding:8px;font-size:12px;word-break:break-all;">${decSummary}</td></tr>`;
+                }
+                html += '</table>';
+                document.getElementById('teacher-history-panel').innerHTML = html;
+            } catch(e) { document.getElementById('teacher-history-panel').innerHTML = '<div style="color:red;">加载失败: ' + (e.message||'') + '</div>'; }
+        }
+
+        // ===== Teacher actions =====
+        async function teacherAdvanceQuarter() {
+            try {
+                let result = await API.advanceQuarter(currentClass);
+                gameState = result.gameState || gameState;
+                showNews("季度结算", "新季度开始");
+                updateStory(gameState.quarter);
+                updateTeacherDashboard();
+            } catch(e) { showToast(e.message || "推进失败"); }
+        }
+
+        async function toggleLockDecision() {
+            try {
+                let result = await API.toggleLock(currentClass);
+                gameState.locked = result.locked;
+                updateTeacherDashboard();
+                showToast(`决策${result.locked ? "锁定" : "解锁"}`);
+            } catch(e) { showToast(e.message || "操作失败"); }
+        }
+
+        async function resetCurrentClass() {
+            if(!confirm("重置课堂所有数据？")) return;
+            try {
+                await API.resetClassroom(currentClass);
+                showToast("已重置");
+                updateTeacherDashboard();
+            } catch(e) { showToast(e.message || "重置失败"); }
+        }
+
+        function exportClassData() {
+            API.adminExport(currentClass, 'json');
+        }
+
+        function exportClassCSV() {
+            API.adminExport(currentClass, 'csv');
+        }
+
+        function exportAllData() {
+            window.open('/api/admin/export-all?format=csv&token=' + API.token);
+        }
+
+        async function exportFullLogs() {
+            try {
+                let logs = await API.getLogs(currentClass);
+                let a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([JSON.stringify(logs)], { type: 'application/json' }));
+                a.download = `${currentClass}_hidden.json`;
+                a.click();
+            } catch(e) { showToast("导出失败"); }
+        }
+
+        async function generateRandomEvent() {
+            try {
+                let result = await API.randomEvent(currentClass);
+                showNews(result.title || "随机事件", result.content || "");
+            } catch(e) { showToast(e.message || "生成失败"); }
+        }
+
+        async function sendBroadcast() {
+            let msg = document.getElementById('broadcast-msg').value;
+            if(!msg) { showToast("请输入广播内容"); return; }
+            try {
+                await API.broadcast(currentClass, "教师情报", msg);
+                showNews("教师情报", msg);
+                document.getElementById('broadcast-msg').value = '';
+            } catch(e) { showToast(e.message || "发送失败"); }
+        }
+
+        // ===== Rankings =====
+        async function loadRankings() {
+            try {
+                let ranks = await API.getRankings(currentClass);
+                document.getElementById('ranking-list').innerHTML = ranks.map((t, i) => `<div>${i + 1}. ${t.name} ${(t.score || 0).toFixed(0)}分</div>`).join('');
+            } catch(e) {}
+        }
+
+        // ===== History =====
+        async function loadHistory() {
+            try {
+                let hist = await API.getTeamHistory(currentTeam.id);
+                document.getElementById('history-list').innerHTML = (hist || []).reverse().map(h => `<div>Q${h.year}.${h.quarter} 利润${formatNumber(h.profit || 0)} ${(h.feedback || '').substring(0, 100)}</div>`).join('') || '暂无记录';
+            } catch(e) {}
+        }
+
+        // ===== Yearly rating =====
+        async function refreshYearlyRatingPanel() {
+            if(!currentUser || !currentTeam) return;
+            let currentYear = gameState.year;
+            let currentQuarter = gameState.quarter;
+            let canRate = (currentQuarter === 1);
+            let targetYear = currentYear - 1;
+
+            if(!canRate || targetYear < 1) {
+                document.getElementById('yearly-rating-panel').innerHTML = `<div class="rating-note">📅 年度评优将在每年第1季度开放，用于评价前一年的表现。</div>`;
+                return;
+            }
+
+            try {
+                let check = await API.checkRating(targetYear);
+                if(check && check.rated) {
+                    document.getElementById('yearly-rating-panel').innerHTML = `<div class="rating-note">✅ 您已完成 ${targetYear} 年度的评优。</div>`;
+                    return;
+                }
+            } catch(e) {}
+
+            // Get team members
+            try {
+                let teamDetail = await API.getTeamDetail(currentTeam.id);
+                let members = (teamDetail.members || []).filter(p => p.id !== currentUser.id);
+                if(members.length === 0) {
+                    document.getElementById('yearly-rating-panel').innerHTML = `<div>暂无其他成员</div>`;
+                    return;
+                }
+                let html = `<div class="rating-note">请对 ${targetYear} 年度组内成员评分（公开分年底公布，悄悄分永久保密）。</div>`;
+                for(let m of members) {
+                    html += `<div class="member-item">${m.id} (${m.role}) 公开分:<input id="pub_${m.id}" type="number" min="1" max="10" style="width:60px;"> 悄悄分:<input id="sec_${m.id}" type="number" min="1" max="10" style="width:60px;"></div>`;
+                }
+                html += `<button class="btn btn-primary" id="submitYearlyRatingBtn">提交年度评分</button>`;
+                document.getElementById('yearly-rating-panel').innerHTML = html;
+                document.getElementById('submitYearlyRatingBtn')?.addEventListener('click', () => submitYearlyRating(targetYear, members));
+            } catch(e) {}
+        }
+
+        async function submitYearlyRating(year, members) {
+            let ratings = [];
+            for(let m of members) {
+                let pub = document.getElementById(`pub_${m.id}`)?.value;
+                let sec = document.getElementById(`sec_${m.id}`)?.value;
+                if(pub) ratings.push({ toId: m.id, type: 'public', score: parseInt(pub) });
+                if(sec) ratings.push({ toId: m.id, type: 'secret', score: parseInt(sec) });
+            }
+            try {
+                await API.submitYearlyRating(ratings, year);
+                showToast(`已提交 ${year} 年度评分。`);
+                refreshYearlyRatingPanel();
+            } catch(e) { showToast(e.message || "提交失败"); }
+        }
+
+        // ===== Alliance system =====
+        async function refreshAlliancePanel() {
+            if(!currentUser || !currentTeam) return;
+            let canUpdate = (gameState.quarter === 2 || gameState.quarter === 4);
+
+            try {
+                let alliances = await API.getTeamAlliances(currentTeam.id);
+                let teams = [];
+                try {
+                    let t = await API.getTeams(currentClass);
+                    teams = (t || []).filter(tm => tm.id !== currentTeam.id);
+                } catch(e) {}
+
+                let html = `<div class="rating-note">🤝 你当前的联盟关系：</div>`;
+                if(!alliances || alliances.length === 0) html += `<div>暂无联盟。可在下方新建。</div>`;
+                for(let a of (alliances || [])) {
+                    html += `<div class="alliance-card">🔗 与 ${a.partner_name || a.toTeamId} 在领域「${a.field}」的联盟（${a.type}）<button class="btn btn-danger" style="margin-left:10px;font-size:12px;padding:4px 10px;" onclick="dissolveAlliance('${a.id}')">解散</button></div>`;
+                }
+
+                if(canUpdate) {
+                    html += `<hr><div class="rating-note">📌 半年窗口期：可以更新联盟关系。</div>
+                    <button id="allianceRatingBtn" class="btn btn-secondary">对盟友进行评分</button>`;
+                } else {
+                    html += `<div class="rating-note">下个联盟更新窗口在第${gameState.quarter < 2 ? "2" : "4"}季度末。</div>`;
+                }
+
+                // Send alliance request
+                html += `<hr><div class="rating-note">📨 主动向其他团队发送联盟意向</div>
+                <select id="target-team" class="form-select"><option value="">选择目标团队</option>${teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}</select>
+                <select id="propose-field" class="form-select"><option value="研发">研发</option><option value="生产">生产</option><option value="渠道">渠道</option><option value="情报">情报</option></select>
+                <select id="propose-type" class="form-select"><option value="双边">双边</option><option value="多边">多边</option></select>
+                <button id="sendAllianceRequestBtn" class="btn btn-primary">发送联盟意向</button>`;
+
+                document.getElementById('alliance-panel').innerHTML = html;
+
+                // Incoming requests
+                try {
+                    let requests = await API.getIncomingAllianceRequests();
+                    let reqHtml = (requests || []).map(req => {
+                        return `<div class="alliance-card">📩 来自 ${req.from_team_name || req.fromTeamId} 的联盟意向：领域「${req.field}」，类型 ${req.type}。 <button onclick="respondToAllianceRequest('${req.id}', 'accept')">接受</button> <button onclick="respondToAllianceRequest('${req.id}', 'reject')">拒绝</button></div>`;
+                    }).join('');
+                    document.getElementById('incoming-alliance-requests').innerHTML = reqHtml || "暂无联盟意向。";
+                } catch(e) {
+                    document.getElementById('incoming-alliance-requests').innerHTML = "暂无联盟意向。";
+                }
+
+                // Bind events
+                document.getElementById('sendAllianceRequestBtn')?.addEventListener('click', sendAllianceRequest);
+                if(canUpdate) {
+                    document.getElementById('allianceRatingBtn')?.addEventListener('click', () => openAllianceRatingModal(alliances, teams));
+                }
+            } catch(e) {}
+        }
+
+        async function sendAllianceRequest() {
+            let toId = document.getElementById('target-team').value;
+            let field = document.getElementById('propose-field').value;
+            let type = document.getElementById('propose-type').value;
+            if(!toId) { showToast("请选择目标团队"); return; }
+            try {
+                await API.sendAllianceRequest(toId, field, type);
+                showToast("联盟意向已发送");
+                refreshAlliancePanel();
+            } catch(e) { showToast(e.message || "发送失败"); }
+        }
+
+        async function respondToAllianceRequest(reqId, action) {
+            try {
+                await API.respondAllianceRequest(reqId, action);
+                showToast(`已${action === 'accept' ? '接受' : '拒绝'}联盟意向`);
+                refreshAlliancePanel();
+            } catch(e) { showToast(e.message || "操作失败"); }
+        }
+
+        async function dissolveAlliance(allianceId) {
+            if(!confirm("确认解散该联盟？")) return;
+            try {
+                await API.dissolveAlliance(allianceId);
+                showToast("联盟已解散");
+                refreshAlliancePanel();
+            } catch(e) { showToast(e.message || "操作失败"); }
+        }
+
+        function openAllianceRatingModal(alliances, teams) {
+            if(!alliances || alliances.length === 0) { showToast("尚无盟友可评分"); return; }
+            let allyIds = [...new Set(alliances.map(a => a.partner_id || a.toTeamId))];
+            let html = `<div class="rating-note">请对盟友进行半年评分（公开/非公开/系统）。</div>`;
+            for(let tid of allyIds) {
+                let t = teams.find(tt => tt.id === tid);
+                let name = t ? t.name : (alliances.find(a => (a.partner_id || a.toTeamId) === tid)?.partner_name || tid);
+                html += `<div class="member-item">${name} 公开分:<input id="pub_all_${tid}" type="number" min="1" max="10"> 非公开分:<input id="sec_all_${tid}" type="number" min="1" max="10"></div>`;
+            }
+            html += `<button id="submitAllianceRating" class="btn btn-primary">提交评分</button><button class="btn btn-secondary" style="margin-left:10px;" id="closeAllianceRating">关闭</button>`;
+            let modal = document.createElement('div');
+            modal.className = 'modal-mask';
+            modal.innerHTML = `<div style="background:white; border-radius:28px; padding:28px; max-width:500px;">${html}</div>`;
+            document.body.appendChild(modal);
+            modal.querySelector('#closeAllianceRating').onclick = () => modal.remove();
+            modal.querySelector('#submitAllianceRating').onclick = async () => {
+                let ratings = [];
+                let half = gameState.quarter > 2 ? 2 : 1;
+                for(let tid of allyIds) {
+                    let pub = modal.querySelector(`#pub_all_${tid}`)?.value;
+                    let sec = modal.querySelector(`#sec_all_${tid}`)?.value;
+                    if(pub) ratings.push({ toId: tid, type: 'alliance_public', score: parseInt(pub) });
+                    if(sec) ratings.push({ toId: tid, type: 'alliance_secret', score: parseInt(sec) });
+                }
+                try {
+                    await API.submitAllianceRating(ratings, gameState.year, half);
+                    showToast("联盟评分已提交");
+                    modal.remove();
+                } catch(e) { showToast(e.message || "提交失败"); }
+            };
+        }
+
+        // ===== Intel invest =====
+        async function investIntel() {
+            try {
+                let result = await API.investIntel();
+                // Show report from rankings/teams
+                let teams = await API.getTeams(currentClass);
+                let report = "<strong>🔍 各组优劣势情报（投资3万元获得）</strong><br>";
+                for(let t of (teams || [])) {
+                    if(t.id === currentTeam.id) continue;
+                    report += `<div><strong>${t.name}</strong>：市占 ${(t.marketShare || 0).toFixed(1)}% | 技术 ${(t.techLevel || 0).toFixed(1)} | 品牌 ${t.brand || 0} | 情报 ${t.intelAccuracy || 0}% | 效率 ${t.efficiency || 0}%</div>`;
+                }
+                document.getElementById('intelReport').innerHTML = report;
+                document.getElementById('intelReport').style.display = 'block';
+                if(result.cash !== undefined) currentTeam.cash = result.cash;
+                showToast("情报报告已生成");
+            } catch(e) { showToast(e.message || "情报投资失败"); }
+        }
+
+        // ===== HR panel =====
+        async function loadTeamAndHRExtended() {
+            if(!currentUser || !currentTeam) return;
+            try {
+                let teamDetail = await API.getTeamDetail(currentTeam.id);
+                let members = teamDetail.members || [];
+                let canAct = (currentUser.role === 'CEO' || currentUser.role === 'HR');
+                let actionHtml = `<div>${canAct ? "<strong>人事操作</strong>" : "仅CEO/HR可操作"}</div>`;
+                if(canAct) {
+                    actionHtml += `<select id="fire-target" class="form-select"><option value="">裁员</option>${members.map(m => `<option value="${m.id}">${m.id} (${m.role})</option>`).join('')}</select> <button id="fireBtn" class="btn btn-danger">🔥 裁员 (N+2补偿)</button> <hr><div><strong>挖人</strong><input id="target-pid" placeholder="目标学号" class="form-input"><input id="target-role" placeholder="目标角色" class="form-input"><input id="target-salary" placeholder="年薪(万)" class="form-input"><button id="directRecruitBtn" class="btn btn-primary">发送橄榄枝</button></div>`;
+                } else {
+                    actionHtml += `<div>可向CEO/HR谏言</div>`;
+                }
+                document.getElementById('hr-action-panel').innerHTML = actionHtml;
+                document.getElementById('fireBtn')?.addEventListener('click', fireMember);
+                document.getElementById('directRecruitBtn')?.addEventListener('click', sendHireOffer);
+
+                // Incoming offers
+                try {
+                    let offers = await API.getIncomingOffers();
+                    let incomingHtml = (offers || []).map(o => `<div>来自 ${o.from_team_name || ''} 邀请担任 ${o.target_role}，年薪 ${o.salary_offer ? o.salary_offer + '万' : '面议'} <button onclick="acceptOffer('${o.id}')">同意</button> <button onclick="rejectOffer('${o.id}')">拒绝</button></div>`).join('');
+                    document.getElementById('incoming-offers').innerHTML = incomingHtml || "暂无邀请";
+                } catch(e) {
+                    document.getElementById('incoming-offers').innerHTML = "暂无邀请";
+                }
+            } catch(e) {}
+        }
+
+        async function sendHireOffer() {
+            let pid = document.getElementById('target-pid').value.trim();
+            let role = document.getElementById('target-role').value.trim();
+            let salary = document.getElementById('target-salary').value.trim();
+            if(!pid || !role) { showToast("请填写目标学号和角色"); return; }
+            try {
+                await API.sendOffer(pid, role, parseInt(salary) || 0);
+                showToast("橄榄枝已发送");
+                loadTeamAndHRExtended();
+            } catch(e) { showToast(e.message || "发送失败"); }
+        }
+
+        async function acceptOffer(offerId) {
+            try {
+                await API.respondOffer(offerId, 'accept');
+                showToast("已接受");
+                loadTeamAndHRExtended();
+                updateDashboard();
+            } catch(e) { showToast(e.message || "操作失败"); }
+        }
+
+        async function rejectOffer(offerId) {
+            try {
+                await API.respondOffer(offerId, 'reject');
+                showToast("已拒绝");
+                loadTeamAndHRExtended();
+            } catch(e) { showToast(e.message || "操作失败"); }
+        }
+
+        async function fireMember() {
+            let tid = document.getElementById('fire-target').value;
+            if(!tid) { showToast("请选择裁员对象"); return; }
+            if(!confirm(`确认裁员 ${tid}？`)) return;
+            try {
+                let result = await API.fireMember(tid);
+                showToast(`已裁员，补偿${formatNumber(result.severance || 0)}`);
+                loadTeamAndHRExtended();
+                updateDashboard();
+            } catch(e) { showToast(e.message || "裁员失败"); }
+        }
+
+        // ===== Competitor view =====
+        async function viewCompetitorData() {
+            try {
+                let teams = await API.getTeams(currentClass);
+                let others = (teams || []).filter(t => t.id !== currentTeam.id).slice(0, 3);
+                alert("对手情报:\n" + others.map(o => `${o.name} 市占${(o.marketShare || 0).toFixed(1)}% 技术${(o.techLevel || 0).toFixed(1)}`).join('\n'));
+            } catch(e) { showToast("获取情报失败"); }
+        }
+
+        // ===== Admin panel =====
+        async function loadAdminPanel() {
+            try {
+                let teachers = await API.adminGetTeachers();
+                let html = "<ul>";
+                for(let t of (teachers || [])) {
+                    if(t.username === 'admin') continue;
+                    html += `<li>${t.username} <button onclick="deleteTeacher('${t.username}')">删除该教师</button></li>`;
+                }
+                html += "</ul>";
+                document.getElementById('admin-teacher-list').innerHTML = html;
+            } catch(e) {}
+        }
+
+        async function deleteTeacher(username) {
+            if(!confirm(`删除教师 ${username}？`)) return;
+            try {
+                await API.adminDeleteTeacher(username);
+                loadAdminPanel();
+                showToast(`已删除${username}`);
+            } catch(e) { showToast(e.message || "删除失败"); }
+        }
+
+        async function resetAllTeachers() {
+            if(!confirm("重置所有教师？")) return;
+            try {
+                await API.adminResetAll();
+                loadAdminPanel();
+                showToast("已重置");
+            } catch(e) { showToast(e.message || "重置失败"); }
+        }
+
+        // ===== Event bindings =====
+        window.onload = async function() {
+            document.getElementById('studentLoginBtn')?.addEventListener('click', studentLogin);
+            document.getElementById('showRegisterBtn')?.addEventListener('click', () => { document.getElementById('login-form').style.display = 'none'; document.getElementById('register-form').style.display = 'block'; });
+            document.getElementById('showTeacherBtn')?.addEventListener('click', () => { document.getElementById('login-form').style.display = 'none'; document.getElementById('teacher-form').style.display = 'block'; });
+            document.getElementById('showHelpBtn')?.addEventListener('click', showHelpModal);
+            document.getElementById('confirmRegisterBtn')?.addEventListener('click', registerTeam);
+            document.getElementById('teacherLoginBtn')?.addEventListener('click', teacherLogin);
+            document.getElementById('teacherRegisterBtn')?.addEventListener('click', showTeacherRegister);
+            document.getElementById('submitDecisionBtn')?.addEventListener('click', submitDecision);
+            document.getElementById('viewCompetitorBtn')?.addEventListener('click', viewCompetitorData);
+            document.getElementById('advanceQuarterBtn')?.addEventListener('click', teacherAdvanceQuarter);
+            document.getElementById('toggleLockBtn')?.addEventListener('click', toggleLockDecision);
+            document.getElementById('resetClassBtn')?.addEventListener('click', resetCurrentClass);
+            document.getElementById('exportJsonBtn')?.addEventListener('click', exportClassData);
+            document.getElementById('exportCsvBtn')?.addEventListener('click', exportClassCSV);
+            document.getElementById('exportAllCsvBtn')?.addEventListener('click', exportAllData);
+            document.getElementById('randomEventBtn')?.addEventListener('click', generateRandomEvent);
+            document.getElementById('exportLogsBtn')?.addEventListener('click', exportFullLogs);
+            document.getElementById('resetAllTeachersBtn')?.addEventListener('click', resetAllTeachers);
+            document.getElementById('sendBroadcastBtn')?.addEventListener('click', sendBroadcast);
+            document.getElementById('inGameHelpBtn')?.addEventListener('click', showHelpModal);
+            document.getElementById('intelInvestBtn')?.addEventListener('click', investIntel);
+            document.getElementById('loadHistoryBtn')?.addEventListener('click', loadTeacherHistory);
+
+            // Session restore: check if token exists
+            if(API.token) {
+                try {
+                    let session = await API.getSession();
+                    if(session.user_type === 'teacher') {
+                        currentTeacher = session.teacher;
+                        isTeacher = true;
+                        if(session.classroom_id) {
+                            currentClass = session.classroom_id;
+                            enterTeacherApp();
+                        } else {
+                            showTeacherClassList();
+                        }
+                    } else if(session.user_type === 'student') {
+                        currentUser = session.participant;
+                        currentTeam = session.team;
+                        currentClass = session.classroom_id;
+                        gameState = session.gameState || gameState;
+                        isTeacher = false;
+                        enterApp();
+                    } else {
+                        document.getElementById('login-page').style.display = 'flex';
+                    }
+                } catch(e) {
+                    API.clearToken();
+                    document.getElementById('login-page').style.display = 'flex';
+                }
+            } else {
+                document.getElementById('login-page').style.display = 'flex';
+            }
+        };
+    </script>
+</body>
+</html>
