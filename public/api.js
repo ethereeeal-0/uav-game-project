@@ -206,9 +206,31 @@ const API = {
     return this.request('GET', '/api/alliances/requests/incoming');
   },
 
-  async respondAllianceRequest(requestId, action) {
-    return this.request('POST', '/api/alliances/requests/' + requestId + '/respond', { action });
-  },
+  async respondAllianceRequest(requestId, accept) {
+  try {
+    // 强制区分：接受=accepted，拒绝=rejected（兜底修复，杜绝传参错误）
+    let action;
+    let tip;
+    if (accept === true || accept === 'accept') {
+      action = 'accepted';
+      tip = '联盟建立成功！';
+    } else {
+      action = 'rejected';
+      tip = '已拒绝联盟意向';
+    }
+
+    const res = await this.request('POST', `/api/alliances/requests/${requestId}/respond`, { 
+      action: action 
+    });
+
+    alert(tip);
+    location.reload();
+    return res;
+  } catch (err) {
+    console.error(err);
+    alert("操作失败：" + err.message);
+  }
+},
 
   async dissolveAlliance(allianceId) {
     return this.request('DELETE', '/api/alliances/' + allianceId);
