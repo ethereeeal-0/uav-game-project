@@ -434,14 +434,8 @@
                 gameState = data.gameState || gameState;
                 isTeacher = false;
 
-                // Prompt for risk preference each quarter
-                let riskVal = await showRiskModal();
-                if(riskVal !== null) {
-                    await API.updateRisk(riskVal).catch(() => {});
-                }
-
                 showToast(`欢迎 ${currentTeam.name} - ${currentUser.role}`);
-                enterApp();
+                await enterApp();
             } catch(e) { showToast(e.message || '登录失败'); }
         }
 
@@ -471,7 +465,7 @@
         function backToLogin() { location.reload(); }
 
         // ===== Enter app views =====
-        function enterApp() {
+        async function enterApp() {
             document.getElementById('login-page').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
             document.getElementById('display-teamname').textContent = currentTeam.name;
@@ -479,6 +473,8 @@
             document.getElementById('display-quarter').textContent = `${gameState.year}年 Q${gameState.quarter}`;
             updateDashboard();
             setupDecisionUI();
+            refreshDecisionStatus();
+            await ensureCurrentQuarterRisk();
             refreshYearlyRatingPanel();
             refreshAlliancePanel();
             updateStory(gameState.quarter);
@@ -512,6 +508,46 @@
             updateBudget();
         }
 
+        function setDecisionButtonState(submitted) {
+            const btn = document.getElementById('submitDecisionBtn');
+            if (!btn) return;
+            if (submitted) {
+                btn.disabled = true;
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+                btn.innerText = '✔️ 本季度决策已提交';
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-primary');
+                btn.innerText = '✅ 提交季度决策';
+            }
+        }
+
+        async function refreshDecisionStatus() {
+            try {
+                const status = await API.checkDecision();
+                setDecisionButtonState(status.submitted);
+            } catch (e) {
+                setDecisionButtonState(false);
+            }
+        }
+
+        async function ensureCurrentQuarterRisk() {
+            if (!currentUser || !gameState) return;
+            const currentQuarterKey = `${gameState.year}-${gameState.quarter}`;
+            if (currentUser.last_risk_quarter === currentQuarterKey) return;
+            let riskVal = await showRiskModal();
+            if (riskVal !== null) {
+                try {
+                    await API.updateRisk(riskVal);
+                    currentUser.last_risk_quarter = currentQuarterKey;
+                } catch (e) {
+                    // ignore risk update failure
+                }
+            }
+        }
+
         function attachSliderEvents() {
             document.querySelectorAll('.slider, input[type=range]').forEach(s => {
                 s.addEventListener('input', () => {
@@ -541,10 +577,21 @@
             else if(role === 'CFO') decisions = { fund: parseInt(document.getElementById('cfo-fund')?.value), control: parseInt(document.getElementById('cfo-control')?.value), leverage: parseInt(document.getElementById('cfo-leverage')?.value), dividend: parseInt(document.getElementById('cfo-dividend')?.value), esg: parseInt(document.getElementById('cfo-esg')?.value) };
             else if(role === 'CMO') decisions = { budget: parseInt(document.getElementById('cmo-budget')?.value), price: parseFloat(document.getElementById('cmo-price')?.value), channels: parseInt(document.getElementById('cmo-channels')?.value), branding: parseInt(document.getElementById('cmo-brand')?.value), promo: parseInt(document.getElementById('cmo-promo')?.value) };
             else if(role === 'HR') decisions = { recruit: parseInt(document.getElementById('hr-recruit')?.value), training: parseInt(document.getElementById('hr-training')?.value), salary: document.getElementById('hr-salary')?.value, equity: parseInt(document.getElementById('hr-equity')?.value), culture: parseInt(document.getElementById('hr-culture')?.value) };
+
+            const btn = document.getElementById('submitDecisionBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = '提交中...';
+            }
+
             try {
                 await API.submitDecision(decisions);
+                setDecisionButtonState(true);
                 showToast("决策已提交");
-            } catch(e) { showToast(e.message || "提交失败"); }
+            } catch(e) {
+                setDecisionButtonState(false);
+                showToast(e.message || "提交失败");
+            }
         }
 
         // ===== Dashboard update (student) =====
@@ -555,6 +602,7 @@
                 let t = teams.find(tm => tm.id === currentTeam.id) || currentTeam;
                 currentTeam = t;
                 gameState = detail.gameState || gameState;
+                refreshDecisionStatus();
 
                 document.getElementById('display-quarter').textContent = `${gameState.year}年 Q${gameState.quarter}`;
                 document.getElementById('metric-cash').innerHTML = formatNumber(t.cash || 0);
@@ -1122,7 +1170,7 @@
                         currentClass = session.classroom_id;
                         gameState = session.gameState || gameState;
                         isTeacher = false;
-                        enterApp();
+                        await enterApp();
                     } else {
                         document.getElementById('login-page').style.display = 'flex';
                     }
