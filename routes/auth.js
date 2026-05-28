@@ -105,6 +105,57 @@ module.exports = function(db) {
     res.json({ user_type: 'student', participant, team, gameState, classroom_id: s.classroom_id });
   });
 
+  // Switch student role within the same team/classroom
+  router.post('/switch-role', authMiddleware(db), (req, res) => {
+    if (req.session.user_type !== 'student') {
+      return res.status(403).json({ error: '需要学生身份' });
+    }
+
+    const { role } = req.body;
+    const validRoles = ['CEO', 'CIO', 'COO', 'CFO', 'CMO', 'HR'];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ error: '无效角色' });
+    }
+
+    const currentParticipant = db.prepare('SELECT * FROM participants WHERE id = ?').get(req.session.participant_id);
+    if (!currentParticipant) {
+      return res.status(404).json({ error: '当前参与者不存在' });
+    }
+
+    let participant = db.prepare(
+      'SELECT * FROM participants WHERE student_id = ? AND classroom_id = ? AND team_id = ? AND role = ?'
+    ).get(currentParticipant.student_id, req.session.classroom_id, req.session.team_id, role);
+
+    if (!participant) {
+      db.prepare(`INSERT INTO participants (student_id, classroom_id, team_id, role, grade, gender, age, work_years, role_years)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        .run(
+          currentParticipant.student_id,
+          req.session.classroom_id,
+          req.session.team_id,
+          role,
+          currentParticipant.grade,
+          currentParticipant.gender,
+          currentParticipant.age,
+          currentParticipant.work_years || 0,
+          currentParticipant.role_years || 0
+        );
+      participant = db.prepare(
+        'SELECT * FROM participants WHERE student_id = ? AND classroom_id = ? AND team_id = ? AND role = ?'
+      ).get(currentParticipant.student_id, req.session.classroom_id, req.session.team_id, role);
+    }
+
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (token) {
+      db.prepare('UPDATE sessions SET participant_id = ?, role = ? WHERE token = ?')
+        .run(participant.id, role, token);
+    }
+
+    const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(req.session.team_id);
+    const gameState = db.prepare('SELECT * FROM game_state WHERE classroom_id = ?').get(req.session.classroom_id);
+    res.json({ participant, team, gameState, classroom_id: req.session.classroom_id });
+  });
+
   // Logout
   router.post('/logout', (req, res) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
