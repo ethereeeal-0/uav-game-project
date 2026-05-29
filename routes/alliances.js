@@ -7,9 +7,15 @@ module.exports = function(db) {
 
   // Get alliances for a team
   router.get('/team/:teamId', auth, (req, res) => {
-    const alliances = db.prepare(
-      "SELECT * FROM alliances WHERE (from_team_id = ? OR to_team_id = ?) AND status = 'active'"
-    ).all(req.params.teamId, req.params.teamId);
+    const alliances = db.prepare(`
+      SELECT a.*, 
+             CASE WHEN a.from_team_id = ? THEN a.to_team_id ELSE a.from_team_id END AS partner_id,
+             CASE WHEN a.from_team_id = ? THEN t2.name ELSE t1.name END AS partner_name
+      FROM alliances a
+      JOIN teams t1 ON a.from_team_id = t1.id
+      JOIN teams t2 ON a.to_team_id = t2.id
+      WHERE (a.from_team_id = ? OR a.to_team_id = ?) AND a.status = 'active'
+    `).all(req.params.teamId, req.params.teamId, req.params.teamId, req.params.teamId);
     res.json(alliances);
   });
 
@@ -32,6 +38,33 @@ module.exports = function(db) {
     }
 
     const { classroom_id, team_id } = req.session;
+
+    const existingAlliance = db.prepare(`
+      SELECT id FROM alliances
+      WHERE classroom_id = ?
+        AND status = 'active'
+        AND field = ?
+        AND type = ?
+        AND ((from_team_id = ? AND to_team_id = ?) OR (from_team_id = ? AND to_team_id = ?))
+    `).get(classroom_id, field, type, team_id, to_team_id, to_team_id, team_id);
+
+    if (existingAlliance) {
+      return res.status(400).json({ error: '联盟已建立' });
+    }
+
+    const duplicateRequest = db.prepare(`
+      SELECT id FROM alliance_requests
+      WHERE classroom_id = ?
+        AND from_team_id = ?
+        AND to_team_id = ?
+        AND field = ?
+        AND type = ?
+        AND status = 'pending'
+    `).get(classroom_id, team_id, to_team_id, field, type);
+
+    if (duplicateRequest) {
+      return res.status(400).json({ error: '已发送相同联盟意向，请等待对方处理' });
+    }
 
     db.prepare(`INSERT INTO alliance_requests (classroom_id, from_team_id, to_team_id, field, type)
       VALUES (?, ?, ?, ?, ?)`).run(classroom_id, team_id, to_team_id, field, type);
@@ -70,19 +103,45 @@ module.exports = function(db) {
 
     const request = db.prepare('SELECT * FROM alliance_requests WHERE id = ?').get(req.params.id);
     if (!request) return res.status(404).json({ error: '请求不存在' });
+    if (request.status !== 'pending') {
+      return res.status(400).json({ error: '该请求已处理' });
+    }
 
     db.prepare('UPDATE alliance_requests SET status = ? WHERE id = ?').run(action, request.id);
 
     if (action === 'accepted') {
+      const existingAlliance = db.prepare(`
+        SELECT * FROM alliances
+        WHERE classroom_id = ?
+          AND status = 'active'
+          AND field = ?
+          AND ((from_team_id = ? AND to_team_id = ?) OR (from_team_id = ? AND to_team_id = ?))
+      `).get(
+        request.classroom_id,
+        request.field,
+        request.from_team_id,
+        request.to_team_id,
+        request.to_team_id,
+        request.from_team_id
+      );
+
       const gameState = db.prepare('SELECT * FROM game_state WHERE classroom_id = ?').get(request.classroom_id);
       const currentHalf = gameState.year * 2 + (gameState.quarter > 2 ? 2 : 1);
       const expireHalf = currentHalf + 1;
 
-      db.prepare(`INSERT INTO alliances (classroom_id, from_team_id, to_team_id, field, type, expire_half)
-        VALUES (?, ?, ?, ?, ?, ?)`).run(
-        request.classroom_id, request.from_team_id, request.to_team_id,
-        request.field, request.type, expireHalf
-      );
+      if (!existingAlliance) {
+        db.prepare(`INSERT INTO alliances (classroom_id, from_team_id, to_team_id, field, type, expire_half)
+          VALUES (?, ?, ?, ?, ?, ?)`).run(
+          request.classroom_id, request.from_team_id, request.to_team_id,
+          request.field, request.type, expireHalf
+        );
+      } else if (existingAlliance.type !== request.type) {
+        db.prepare(`UPDATE alliances SET type = ?, expire_half = ?, created_at = datetime('now') WHERE id = ?`).run(
+          request.type,
+          expireHalf,
+          existingAlliance.id
+        );
+      }
 
       db.prepare('INSERT INTO hidden_logs (classroom_id, message) VALUES (?, ?)')
         .run(request.classroom_id, `联盟建立: ${request.from_team_id} ↔ ${request.to_team_id}，领域: ${request.field}`);

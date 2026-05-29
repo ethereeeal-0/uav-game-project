@@ -53,6 +53,10 @@ const API = {
     return this.request('GET', '/api/auth/session');
   },
 
+  async switchRole(role) {
+    return this.request('POST', '/api/auth/switch-role', { role });
+  },
+
   async logout() {
     await this.request('POST', '/api/auth/logout').catch(() => {});
     this.clearToken();

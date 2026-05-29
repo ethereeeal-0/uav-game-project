@@ -60,6 +60,8 @@
         .top-nav .btn-secondary:hover {
             background: rgba(255,255,255,0.3);
         }
+        .btn-small { padding: 6px 12px; font-size: 12px; }
+        .top-nav .btn-small { min-width: 72px; }
         .content { max-width: 1400px; margin: 0 auto; padding: 20px 16px; }
         .card { background: white; border-radius: 28px; padding: 20px 22px; box-shadow: 0 6px 14px rgba(0,0,0,0.03); margin-bottom: 24px; border: 1px solid #e2efef; }
         .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #cfe7e7; padding-bottom: 12px; margin-bottom: 18px; font-weight: 700; color: #1b5e5e; }
@@ -193,7 +195,7 @@
     <div id="app-container" class="app-container" style="display:none;">
         <div class="top-nav">
             <div><span class="company-name" id="display-teamname"></span> <span class="quarter-info" id="display-quarter"></span></div>
-            <div><span class="role-badge" id="display-role"></span> <button class="btn btn-secondary btn-small" onclick="logout()">退出</button></div>
+            <div><span class="role-badge" id="display-role"></span> <button class="btn btn-secondary btn-small" onclick="showRoleSwitchModal()">切换身份</button> <button class="btn btn-secondary btn-small" onclick="logout()">退出</button></div>
         </div>
         <div class="content">
             <div class="story-container"><div class="story-title">📖 创业日志 · 智创飞控 <span id="story-chapter"></span><span class="help-icon" id="inGameHelpBtn" style="background:#667eea; border-radius:50%; width:24px; display:inline-block; text-align:center; cursor:pointer;">?</span></div><div id="story-content"></div><div class="industry-panel"><div class="industry-title">📊 行业情报 & 竞争动态</div><div id="industry-update"></div></div></div>
@@ -462,6 +464,48 @@
             location.reload();
         }
 
+        async function switchRole(newRole) {
+            if (!currentUser || currentUser.role === newRole) return;
+            try {
+                const data = await API.switchRole(newRole);
+                currentUser = data.participant;
+                currentTeam = data.team || currentTeam;
+                gameState = data.gameState || gameState;
+                document.getElementById('display-role').textContent = currentUser.role;
+                setupDecisionUI();
+                refreshDecisionStatus();
+                updateDashboard();
+                showToast(`已切换为 ${currentUser.role}`);
+            } catch (e) {
+                showToast(e.message || '切换失败');
+            }
+        }
+
+        function showRoleSwitchModal() {
+            if (!currentUser) return;
+            const roles = ['CEO', 'CIO', 'COO', 'CFO', 'CMO', 'HR'];
+            const modal = document.createElement('div');
+            modal.className = 'modal-mask';
+            modal.innerHTML = `<div style="background:white; border-radius:28px; padding:24px; width:320px; max-width:90vw;">
+                <h3 style="margin-bottom:16px;">🔄 快速切换身份</h3>
+                <div style="margin-bottom:18px;"><label style="display:block; font-weight:600; margin-bottom:8px;">当前身份：${currentUser.role}</label>
+                <select id="role-switch-select" class="form-select">${roles.map(role => `<option value="${role}"${role === currentUser.role ? ' selected' : ''}>${role}</option>`).join('')}</select></div>
+                <div style="text-align:right;">
+                    <button class="btn btn-secondary" id="cancel-switch" style="margin-right:10px;">取消</button>
+                    <button class="btn btn-primary" id="confirm-switch">切换身份</button>
+                </div>
+            </div>`;
+            document.body.appendChild(modal);
+            modal.querySelector('#cancel-switch').onclick = () => modal.remove();
+            modal.querySelector('#confirm-switch').onclick = async () => {
+                const newRole = modal.querySelector('#role-switch-select').value;
+                if (newRole && newRole !== currentUser.role) {
+                    await switchRole(newRole);
+                }
+                modal.remove();
+            };
+        }
+
         function backToLogin() { location.reload(); }
 
         // ===== Enter app views =====
@@ -500,7 +544,7 @@
             else if(role === 'CIO') html += `<div class="decision-row"><label>情报预算</label><input type="range" id="cio-budget" min="0" max="300000" value="80000"></div><div class="decision-row"><label>情报方向</label><select id="cio-focus" class="form-select"><option>竞争对手</option><option>政策</option></select></div><div class="decision-row"><label>分析深度</label><input type="range" id="cio-depth" min="1" max="5" value="3"></div><div class="decision-row"><label>反情报投入</label><input type="range" id="cio-counter" min="0" max="100" value="40"></div><div class="decision-row"><label>法务监测</label><input type="range" id="cio-legal" min="0" max="100" value="30"></div>`;
             else if(role === 'COO') html += `<div class="decision-row"><label>AI研发</label><input type="range" id="coo-ai" min="0" max="700000" value="180000"></div><div class="decision-row"><label>自动化</label><input type="range" id="coo-auto" min="0" max="400000" value="100000"></div><div class="decision-row"><label>专利</label><select id="coo-patent" class="form-select"><option>0</option><option>1</option></select></div><div class="decision-row"><label>供应链</label><input type="range" id="coo-supply" min="0" max="250000" value="50000"></div><div class="decision-row"><label>产能扩张</label><input type="range" id="coo-capacity" min="0" max="80" value="20"></div><div class="decision-row"><label>产量(架)</label><input type="range" id="coo-production" min="0" max="2000" step="50" value="600"><span id="prod-val">600</span></div>`;
             else if(role === 'CFO') html += `<div class="decision-row"><label>额外融资</label><input type="range" id="cfo-fund" min="0" max="1000000" value="200000"></div><div class="decision-row"><label>成本控制</label><input type="range" id="cfo-control" min="0" max="30" value="10"></div><div class="decision-row"><label>财务杠杆</label><input type="range" id="cfo-leverage" min="0" max="100" value="30"></div><div class="decision-row"><label>股利</label><input type="range" id="cfo-dividend" min="0" max="20" value="0"></div><div class="decision-row"><label>ESG投资</label><input type="range" id="cfo-esg" min="0" max="200000" value="50000"></div>`;
-            else if(role === 'CMO') html += `<div class="decision-row"><label>营销预算</label><input type="range" id="cmo-budget" min="0" max="600000" value="150000"></div><div class="decision-row"><label>定价(百元)</label><input type="range" id="cmo-price" min="5" max="50" step="0.5" value="25"></div><div class="decision-row"><label>渠道</label><input type="range" id="cmo-channels" min="0" max="300000" value="80000"></div><div class="decision-row"><label>品牌强度</label><input type="range" id="cmo-brand" min="0" max="100" value="50"></div><div class="decision-row"><label>促销</label><input type="range" id="cmo-promo" min="0" max="100" value="40"></div>`;
+            else if(role === 'CMO') html += `<div class="decision-row"><label>营销预算</label><input type="range" id="cmo-budget" min="0" max="600000" value="150000"></div><div class="decision-row"><label>定价(百元)</label><input type="range" id="cmo-price" min="5" max="100" step="0.5" value="25"></div><div class="decision-row"><label>渠道</label><input type="range" id="cmo-channels" min="0" max="300000" value="80000"></div><div class="decision-row"><label>品牌强度</label><input type="range" id="cmo-brand" min="0" max="100" value="50"></div><div class="decision-row"><label>促销</label><input type="range" id="cmo-promo" min="0" max="100" value="40"></div>`;
             else if(role === 'HR') html += `<div class="decision-row"><label>招聘</label><input type="range" id="hr-recruit" min="0" max="20" value="5"></div><div class="decision-row"><label>培训</label><input type="range" id="hr-training" min="0" max="200000" value="60000"></div><div class="decision-row"><label>薪酬策略</label><select id="hr-salary" class="form-select"><option>市场水平</option><option>高于市场20%</option></select></div><div class="decision-row"><label>股权激励%</label><input type="range" id="hr-equity" min="0" max="10" value="3"></div><div class="decision-row"><label>文化投入</label><input type="range" id="hr-culture" min="0" max="150000" value="30000"></div>`;
             html += `</div>`;
             document.getElementById('dynamic-decision-areas').innerHTML = html;
