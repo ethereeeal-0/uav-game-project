@@ -314,7 +314,15 @@
             7:{ title:"🚀 引领变革 · 行业标杆", content:"你们的飞控系统被多家OEM厂商采用，成为事实上的标准之一。公司获评国家级专精特新'小巨人'企业，品牌价值跃升。", industry:"【行业地位】智创飞控已成为工业无人机领域不可忽视的力量。"},
             8:{ title:"🏆 登顶时刻 · 新的征程", content:"公司成功进入行业第一梯队，市占率突破15%。但新的挑战来了：eVTOL飞行汽车开始量产，可能会分流无人机投资和技术人才。董事会决定提前布局城市空中交通。", industry:"【前瞻】AI+无人机+空管系统，新一轮竞赛已经开始。"}
         };
-        function updateStory(q) { let chap=Math.min(8,Math.max(1,Math.ceil(q/1))); let s=storyContent[chap]; if(s){ document.getElementById('story-content').innerHTML=`<p>${s.content}</p>`; document.getElementById('industry-update').innerHTML=s.industry; document.getElementById('story-chapter').innerHTML=`${q}/4 · ${s.title}`; } }
+        function updateStory(year, quarter) {
+            let chapter = Math.min(8, Math.max(1, (year - 1) * 4 + quarter));
+            let s = storyContent[chapter];
+            if (s) {
+                document.getElementById('story-content').innerHTML = `<p>${s.content}</p>`;
+                document.getElementById('industry-update').innerHTML = s.industry;
+                document.getElementById('story-chapter').innerHTML = `${chapter}/8 · ${s.title}`;
+            }
+        }
 
         // ===== News popup =====
         function showNews(title, content) {
@@ -522,7 +530,7 @@
             await ensureCurrentQuarterRisk();
             refreshYearlyRatingPanel();
             refreshAlliancePanel();
-            updateStory(gameState.quarter);
+            updateStory(gameState.year, gameState.quarter);
             pollingInterval = setInterval(() => updateDashboard(), 5000);
         }
 
@@ -689,7 +697,7 @@
                 if(last) document.getElementById('feedback-content').innerHTML = last.feedback || '';
 
                 document.getElementById('ai-insight-dynamic').innerHTML = `🧠 猎头AI推荐更新。联盟可提升研发效率15%。`;
-                updateStory(gameState.quarter);
+                updateStory(gameState.year, gameState.quarter);
             } catch(e) {
                 // silently fail on polling errors
             }
@@ -807,7 +815,7 @@
                 let result = await API.advanceQuarter(currentClass);
                 gameState = result.gameState || gameState;
                 showNews("季度结算", "新季度开始");
-                updateStory(gameState.quarter);
+                updateStory(gameState.year, gameState.quarter);
                 updateTeacherDashboard();
             } catch(e) { showToast(e.message || "推进失败"); }
         }
