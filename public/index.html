@@ -78,6 +78,7 @@
         .decision-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 0; border-bottom: 1px solid #def0f0; }
         .decision-label { font-weight: 600; color: #1e5e5e; min-width: 150px; }
         .slider { width: 200px; accent-color: #1c7e6e; }
+        .slider-value { margin-left: 10px; color: #1c7e6e; font-weight: 700; min-width: 44px; display: inline-block; text-align: right; }
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #ffffffea; backdrop-filter: blur(16px); display: flex; justify-content: space-around; padding: 8px 12px 12px; border-top: 1px solid #cae1e1; z-index: 100; }
         .nav-item { text-align: center; cursor: pointer; padding: 6px 14px; border-radius: 40px; transition: 0.2s; background: transparent; }
         .nav-item.active { background: #1f6e6e; color: white; }
@@ -212,7 +213,7 @@
             </div>
             <div id="decision-page" class="page"><div id="dynamic-decision-areas"></div><div class="card"><div class="card-header">💰 预算</div><div id="budget-summary"></div></div><div class="card"><div class="card-header">🤖 AI建议</div><div id="ai-suggestion"></div></div><button class="btn btn-primary btn-block" id="submitDecisionBtn">✅ 提交季度决策</button><button class="btn btn-secondary btn-block" id="viewCompetitorBtn">🔍 竞争对手情报</button></div>
             <div id="team-page" class="page">
-                <div class="card"><div class="card-header">🌟 年度评优（年底开放）</div><div id="yearly-rating-panel"></div></div>
+                <div class="card"><div class="card-header">🌟 年度评优（第1季度开放）</div><div id="yearly-rating-panel"></div></div>
                 <div class="card"><div class="card-header">🦅 猎头AI · 明星选手</div><div id="star-player-list"></div></div>
             </div>
             <div id="hr-page" class="page"><div class="card"><div class="card-header">🔄 人事变动</div><div id="hr-action-panel"></div><div id="incoming-offers"></div></div></div>
@@ -313,7 +314,15 @@
             7:{ title:"🚀 引领变革 · 行业标杆", content:"你们的飞控系统被多家OEM厂商采用，成为事实上的标准之一。公司获评国家级专精特新'小巨人'企业，品牌价值跃升。", industry:"【行业地位】智创飞控已成为工业无人机领域不可忽视的力量。"},
             8:{ title:"🏆 登顶时刻 · 新的征程", content:"公司成功进入行业第一梯队，市占率突破15%。但新的挑战来了：eVTOL飞行汽车开始量产，可能会分流无人机投资和技术人才。董事会决定提前布局城市空中交通。", industry:"【前瞻】AI+无人机+空管系统，新一轮竞赛已经开始。"}
         };
-        function updateStory(q) { let chap=Math.min(8,Math.max(1,Math.ceil(q/1))); let s=storyContent[chap]; if(s){ document.getElementById('story-content').innerHTML=`<p>${s.content}</p>`; document.getElementById('industry-update').innerHTML=s.industry; document.getElementById('story-chapter').innerHTML=`${chap}/8 · ${s.title}`; } }
+        function updateStory(year, quarter) {
+            let chapter = Math.min(8, Math.max(1, (year - 1) * 4 + quarter));
+            let s = storyContent[chapter];
+            if (s) {
+                document.getElementById('story-content').innerHTML = `<p>${s.content}</p>`;
+                document.getElementById('industry-update').innerHTML = s.industry;
+                document.getElementById('story-chapter').innerHTML = `${chapter}/8 · ${s.title}`;
+            }
+        }
 
         // ===== News popup =====
         function showNews(title, content) {
@@ -521,7 +530,7 @@
             await ensureCurrentQuarterRisk();
             refreshYearlyRatingPanel();
             refreshAlliancePanel();
-            updateStory(gameState.quarter);
+            updateStory(gameState.year, gameState.quarter);
             pollingInterval = setInterval(() => updateDashboard(), 5000);
         }
 
@@ -540,12 +549,12 @@
         function setupDecisionUI() {
             let role = currentUser.role;
             let html = `<div class="card"><div class="card-header">${role} 战略决策</div>`;
-            if(role === 'CEO') html += `<div class="decision-row"><label>目标市场</label><select id="ceo-market" class="form-select"><option value="domestic">国内</option><option value="sea">东南亚</option></select></div><div class="decision-row"><label>竞争战略</label><select id="ceo-strategy" class="form-select"><option value="cost">成本领先</option><option value="diff">差异化</option></select></div><div class="decision-row"><label>扩张强度</label><input type="range" id="ceo-expand" min="0" max="100" value="50"></div><div class="decision-row"><label>联盟投入</label><input type="range" id="ceo-alliance" min="0" max="400000" step="20000" value="100000"></div><div class="decision-row"><label>资本运作</label><select id="ceo-capital" class="form-select"><option value="none">无</option><option value="angel">天使轮</option></select></div>`;
-            else if(role === 'CIO') html += `<div class="decision-row"><label>情报预算</label><input type="range" id="cio-budget" min="0" max="300000" value="80000"></div><div class="decision-row"><label>情报方向</label><select id="cio-focus" class="form-select"><option>竞争对手</option><option>政策</option></select></div><div class="decision-row"><label>分析深度</label><input type="range" id="cio-depth" min="1" max="5" value="3"></div><div class="decision-row"><label>反情报投入</label><input type="range" id="cio-counter" min="0" max="100" value="40"></div><div class="decision-row"><label>法务监测</label><input type="range" id="cio-legal" min="0" max="100" value="30"></div>`;
-            else if(role === 'COO') html += `<div class="decision-row"><label>AI研发</label><input type="range" id="coo-ai" min="0" max="700000" value="180000"></div><div class="decision-row"><label>自动化</label><input type="range" id="coo-auto" min="0" max="400000" value="100000"></div><div class="decision-row"><label>专利</label><select id="coo-patent" class="form-select"><option>0</option><option>1</option></select></div><div class="decision-row"><label>供应链</label><input type="range" id="coo-supply" min="0" max="250000" value="50000"></div><div class="decision-row"><label>产能扩张</label><input type="range" id="coo-capacity" min="0" max="80" value="20"></div><div class="decision-row"><label>产量(架)</label><input type="range" id="coo-production" min="0" max="2000" step="50" value="600"><span id="prod-val">600</span></div>`;
-            else if(role === 'CFO') html += `<div class="decision-row"><label>额外融资</label><input type="range" id="cfo-fund" min="0" max="1000000" value="200000"></div><div class="decision-row"><label>成本控制</label><input type="range" id="cfo-control" min="0" max="30" value="10"></div><div class="decision-row"><label>财务杠杆</label><input type="range" id="cfo-leverage" min="0" max="100" value="30"></div><div class="decision-row"><label>股利</label><input type="range" id="cfo-dividend" min="0" max="20" value="0"></div><div class="decision-row"><label>ESG投资</label><input type="range" id="cfo-esg" min="0" max="200000" value="50000"></div>`;
-            else if(role === 'CMO') html += `<div class="decision-row"><label>营销预算</label><input type="range" id="cmo-budget" min="0" max="600000" value="150000"></div><div class="decision-row"><label>定价(百元)</label><input type="range" id="cmo-price" min="5" max="100" step="0.5" value="25"></div><div class="decision-row"><label>渠道</label><input type="range" id="cmo-channels" min="0" max="300000" value="80000"></div><div class="decision-row"><label>品牌强度</label><input type="range" id="cmo-brand" min="0" max="100" value="50"></div><div class="decision-row"><label>促销</label><input type="range" id="cmo-promo" min="0" max="100" value="40"></div>`;
-            else if(role === 'HR') html += `<div class="decision-row"><label>招聘</label><input type="range" id="hr-recruit" min="0" max="20" value="5"></div><div class="decision-row"><label>培训</label><input type="range" id="hr-training" min="0" max="200000" value="60000"></div><div class="decision-row"><label>薪酬策略</label><select id="hr-salary" class="form-select"><option>市场水平</option><option>高于市场20%</option></select></div><div class="decision-row"><label>股权激励%</label><input type="range" id="hr-equity" min="0" max="10" value="3"></div><div class="decision-row"><label>文化投入</label><input type="range" id="hr-culture" min="0" max="150000" value="30000"></div>`;
+            if(role === 'CEO') html += `<div class="decision-row"><label>目标市场</label><select id="ceo-market" class="form-select"><option value="domestic">国内</option><option value="sea">东南亚</option></select></div><div class="decision-row"><label>竞争战略</label><select id="ceo-strategy" class="form-select"><option value="cost">成本领先</option><option value="diff">差异化</option></select></div><div class="decision-row"><label>扩张强度</label><input type="range" class="slider" id="ceo-expand" min="0" max="100" value="50"></div><div class="decision-row"><label>联盟投入</label><input type="range" class="slider" id="ceo-alliance" min="0" max="400000" step="20000" value="100000"></div><div class="decision-row"><label>资本运作</label><select id="ceo-capital" class="form-select"><option value="none">无</option><option value="angel">天使轮</option></select></div>`;
+            else if(role === 'CIO') html += `<div class="decision-row"><label>情报预算</label><input type="range" class="slider" id="cio-budget" min="0" max="300000" value="80000"></div><div class="decision-row"><label>情报方向</label><select id="cio-focus" class="form-select"><option>竞争对手</option><option>政策</option></select></div><div class="decision-row"><label>分析深度</label><input type="range" class="slider" id="cio-depth" min="1" max="5" value="3"></div><div class="decision-row"><label>反情报投入</label><input type="range" class="slider" id="cio-counter" min="0" max="100" value="40"></div><div class="decision-row"><label>法务监测</label><input type="range" class="slider" id="cio-legal" min="0" max="100" value="30"></div>`;
+            else if(role === 'COO') html += `<div class="decision-row"><label>AI研发</label><input type="range" class="slider" id="coo-ai" min="0" max="700000" value="180000"></div><div class="decision-row"><label>自动化</label><input type="range" class="slider" id="coo-auto" min="0" max="400000" value="100000"></div><div class="decision-row"><label>专利</label><select id="coo-patent" class="form-select"><option>0</option><option>1</option></select></div><div class="decision-row"><label>供应链</label><input type="range" class="slider" id="coo-supply" min="0" max="250000" value="50000"></div><div class="decision-row"><label>产能扩张</label><input type="range" class="slider" id="coo-capacity" min="0" max="80" value="20"></div><div class="decision-row"><label>产量(架)</label><input type="range" class="slider" id="coo-production" min="0" max="2000" step="50" value="600"><span id="prod-val">600</span></div>`;
+            else if(role === 'CFO') html += `<div class="decision-row"><label>额外融资</label><input type="range" class="slider" id="cfo-fund" min="0" max="1000000" value="200000"></div><div class="decision-row"><label>成本控制</label><input type="range" class="slider" id="cfo-control" min="0" max="30" value="10"></div><div class="decision-row"><label>财务杠杆</label><input type="range" class="slider" id="cfo-leverage" min="0" max="100" value="30"></div><div class="decision-row"><label>股利</label><input type="range" class="slider" id="cfo-dividend" min="0" max="20" value="0"></div><div class="decision-row"><label>ESG投资</label><input type="range" class="slider" id="cfo-esg" min="0" max="200000" value="50000"></div>`;
+            else if(role === 'CMO') html += `<div class="decision-row"><label>营销预算</label><input type="range" class="slider" id="cmo-budget" min="0" max="600000" value="150000"></div><div class="decision-row"><label>定价(百元)</label><input type="range" class="slider" id="cmo-price" min="5" max="100" step="0.5" value="25"></div><div class="decision-row"><label>渠道</label><input type="range" class="slider" id="cmo-channels" min="0" max="300000" value="80000"></div><div class="decision-row"><label>品牌强度</label><input type="range" class="slider" id="cmo-brand" min="0" max="100" value="50"></div><div class="decision-row"><label>促销</label><input type="range" class="slider" id="cmo-promo" min="0" max="100" value="40"></div>`;
+            else if(role === 'HR') html += `<div class="decision-row"><label>招聘</label><input type="range" class="slider" id="hr-recruit" min="0" max="20" value="5"></div><div class="decision-row"><label>培训</label><input type="range" class="slider" id="hr-training" min="0" max="200000" value="60000"></div><div class="decision-row"><label>薪酬策略</label><select id="hr-salary" class="form-select"><option>市场水平</option><option>高于市场20%</option></select></div><div class="decision-row"><label>股权激励%</label><input type="range" class="slider" id="hr-equity" min="0" max="10" value="3"></div><div class="decision-row"><label>文化投入</label><input type="range" class="slider" id="hr-culture" min="0" max="150000" value="30000"></div>`;
             html += `</div>`;
             document.getElementById('dynamic-decision-areas').innerHTML = html;
             attachSliderEvents();
@@ -594,9 +603,20 @@
 
         function attachSliderEvents() {
             document.querySelectorAll('.slider, input[type=range]').forEach(s => {
+                if (s.parentElement && !s.parentElement.querySelector('span')) {
+                    const valueSpan = document.createElement('span');
+                    valueSpan.className = 'slider-value';
+                    valueSpan.innerText = s.value;
+                    s.parentElement.appendChild(valueSpan);
+                }
                 s.addEventListener('input', () => {
                     updateBudget();
-                    if(s.id === 'coo-production') document.getElementById('prod-val').innerText = s.value;
+                    if (s.id === 'coo-production') {
+                        const prodVal = document.getElementById('prod-val');
+                        if (prodVal) prodVal.innerText = s.value;
+                    }
+                    const valueSpan = s.parentElement?.querySelector('.slider-value') || document.getElementById(`${s.id}-val`);
+                    if (valueSpan) valueSpan.innerText = s.value;
                 });
             });
         }
@@ -677,7 +697,7 @@
                 if(last) document.getElementById('feedback-content').innerHTML = last.feedback || '';
 
                 document.getElementById('ai-insight-dynamic').innerHTML = `🧠 猎头AI推荐更新。联盟可提升研发效率15%。`;
-                updateStory(gameState.quarter);
+                updateStory(gameState.year, gameState.quarter);
             } catch(e) {
                 // silently fail on polling errors
             }
@@ -795,7 +815,7 @@
                 let result = await API.advanceQuarter(currentClass);
                 gameState = result.gameState || gameState;
                 showNews("季度结算", "新季度开始");
-                updateStory(gameState.quarter);
+                updateStory(gameState.year, gameState.quarter);
                 updateTeacherDashboard();
             } catch(e) { showToast(e.message || "推进失败"); }
         }
@@ -876,9 +896,9 @@
         // ===== Yearly rating =====
         async function refreshYearlyRatingPanel() {
             if(!currentUser || !currentTeam) return;
-            let currentYear = gameState.year;
-            let currentQuarter = gameState.quarter;
-            let canRate = (currentQuarter === 1);
+            let currentYear = Number(gameState.year);
+            let currentQuarter = Number(gameState.quarter);
+            let canRate = currentQuarter === 1;
             let targetYear = currentYear - 1;
 
             if(!canRate || targetYear < 1) {
@@ -897,14 +917,15 @@
             // Get team members
             try {
                 let teamDetail = await API.getTeamDetail(currentTeam.id);
-                let members = (teamDetail.members || []).filter(p => p.id !== currentUser.id);
+                let members = (teamDetail.members || []).filter(p => p.id);
                 if(members.length === 0) {
-                    document.getElementById('yearly-rating-panel').innerHTML = `<div>暂无其他成员</div>`;
+                    document.getElementById('yearly-rating-panel').innerHTML = `<div>暂无成员</div>`;
                     return;
                 }
                 let html = `<div class="rating-note">请对 ${targetYear} 年度组内成员评分（公开分年底公布，悄悄分永久保密）。</div>`;
                 for(let m of members) {
-                    html += `<div class="member-item">${m.id} (${m.role}) 公开分:<input id="pub_${m.id}" type="number" min="1" max="10" style="width:60px;"> 悄悄分:<input id="sec_${m.id}" type="number" min="1" max="10" style="width:60px;"></div>`;
+                    const targetId = m.student_id || m.id;
+                    html += `<div class="member-item">${m.student_id || m.id} (${m.role}) 公开分:<input id="pub_${targetId}" type="number" min="0" max="100" placeholder="0-100" style="width:72px;"> 悄悄分:<input id="sec_${targetId}" type="number" min="0" max="100" placeholder="0-100" style="width:72px;"></div>`;
                 }
                 html += `<button class="btn btn-primary" id="submitYearlyRatingBtn">提交年度评分</button>`;
                 document.getElementById('yearly-rating-panel').innerHTML = html;
@@ -914,17 +935,53 @@
 
         async function submitYearlyRating(year, members) {
             let ratings = [];
-            for(let m of members) {
-                let pub = document.getElementById(`pub_${m.id}`)?.value;
-                let sec = document.getElementById(`sec_${m.id}`)?.value;
-                if(pub) ratings.push({ toId: m.id, type: 'public', score: parseInt(pub) });
-                if(sec) ratings.push({ toId: m.id, type: 'secret', score: parseInt(sec) });
+            let missingItems = [];
+            let rangeItems = [];
+            for (let m of members) {
+                const targetId = m.student_id || m.id;
+                if (!targetId) continue;
+                const title = `${m.student_id || targetId}(${m.role || '成员'})`;
+                const pubInput = document.getElementById(`pub_${targetId}`);
+                const secInput = document.getElementById(`sec_${targetId}`);
+                const pubRaw = (pubInput?.value ?? '').trim();
+                const secRaw = (secInput?.value ?? '').trim();
+
+                if (pubRaw === '') {
+                    missingItems.push(`${title} 公开分`);
+                } else {
+                    const pub = Number(pubRaw);
+                    if (!Number.isInteger(pub) || pub < 0 || pub > 100) rangeItems.push(`${title} 公开分`);
+                    else ratings.push({ to_id: targetId, type: 'public', score: pub });
+                }
+
+                if (secRaw === '') {
+                    missingItems.push(`${title} 悄悄分`);
+                } else {
+                    const sec = Number(secRaw);
+                    if (!Number.isInteger(sec) || sec < 0 || sec > 100) rangeItems.push(`${title} 悄悄分`);
+                    else ratings.push({ to_id: targetId, type: 'secret', score: sec });
+                }
+            }
+
+            if (missingItems.length > 0 || rangeItems.length > 0) {
+                let msg = '';
+                if (missingItems.length > 0) {
+                    msg = `请填写以下评分项：${missingItems.join('、')}`;
+                }
+                if (rangeItems.length > 0) {
+                    if (msg) msg += `，且修正以下超出范围的评分：${rangeItems.join('、')}`;
+                    else msg = `以下评分超出范围：${rangeItems.join('、')}`;
+                }
+                showToast(msg);
+                return;
             }
             try {
                 await API.submitYearlyRating(ratings, year);
                 showToast(`已提交 ${year} 年度评分。`);
                 refreshYearlyRatingPanel();
-            } catch(e) { showToast(e.message || "提交失败"); }
+            } catch(e) {
+                showToast(e.message || "提交失败");
+            }
         }
 
         // ===== Alliance system =====
@@ -1017,7 +1074,7 @@
             for(let tid of allyIds) {
                 let t = teams.find(tt => tt.id === tid);
                 let name = t ? t.name : (alliances.find(a => (a.partner_id || a.toTeamId) === tid)?.partner_name || tid);
-                html += `<div class="member-item">${name} 公开分:<input id="pub_all_${tid}" type="number" min="1" max="10"> 非公开分:<input id="sec_all_${tid}" type="number" min="1" max="10"></div>`;
+                html += `<div class="member-item">${name} 公开分:<input id="pub_all_${tid}" type="number" min="0" max="100" placeholder="0-100"> 非公开分:<input id="sec_all_${tid}" type="number" min="0" max="100" placeholder="0-100"></div>`;
             }
             html += `<button id="submitAllianceRating" class="btn btn-primary">提交评分</button><button class="btn btn-secondary" style="margin-left:10px;" id="closeAllianceRating">关闭</button>`;
             let modal = document.createElement('div');
@@ -1029,10 +1086,12 @@
                 let ratings = [];
                 let half = gameState.quarter > 2 ? 2 : 1;
                 for(let tid of allyIds) {
-                    let pub = modal.querySelector(`#pub_all_${tid}`)?.value;
-                    let sec = modal.querySelector(`#sec_all_${tid}`)?.value;
-                    if(pub) ratings.push({ toId: tid, type: 'alliance_public', score: parseInt(pub) });
-                    if(sec) ratings.push({ toId: tid, type: 'alliance_secret', score: parseInt(sec) });
+                    let pubRaw = (modal.querySelector(`#pub_all_${tid}`)?.value ?? '').trim();
+                    let secRaw = (modal.querySelector(`#sec_all_${tid}`)?.value ?? '').trim();
+                    let pub = parseInt(pubRaw, 10);
+                    let sec = parseInt(secRaw, 10);
+                    if (pubRaw !== '' && !Number.isNaN(pub) && pub >= 0 && pub <= 100) ratings.push({ to_id: tid, type: 'alliance_public', score: pub });
+                    if (secRaw !== '' && !Number.isNaN(sec) && sec >= 0 && sec <= 100) ratings.push({ to_id: tid, type: 'alliance_secret', score: sec });
                 }
                 try {
                     await API.submitAllianceRating(ratings, gameState.year, half);
