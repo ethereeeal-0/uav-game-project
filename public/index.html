@@ -914,23 +914,27 @@
                 }
             } catch(e) {}
 
-            // Get team members
+            // Get team members for peer rating
             try {
                 let teamDetail = await API.getTeamDetail(currentTeam.id);
-                let members = (teamDetail.members || []).filter(p => p.id);
-                if(members.length === 0) {
-                    document.getElementById('yearly-rating-panel').innerHTML = `<div>暂无成员</div>`;
+                let members = (teamDetail.members || []).filter(p => p.id && p.team_id === currentTeam.id);
+                const selfPid = currentUser?.id; // participant id
+                let rateTargets = members.filter(m => m.id !== selfPid);
+                if(rateTargets.length === 0) {
+                    document.getElementById('yearly-rating-panel').innerHTML = `<div>当前本组内暂无可评分的其他成员。</div>`;
                     return;
                 }
-                let html = `<div class="rating-note">请对 ${targetYear} 年度组内成员评分（公开分年底公布，悄悄分永久保密）。</div>`;
-                for(let m of members) {
-                    const targetId = m.student_id || m.id;
-                    html += `<div class="member-item">${m.student_id || m.id} (${m.role}) 公开分:<input id="pub_${targetId}" type="number" min="0" max="100" placeholder="0-100" style="width:72px;"> 悄悄分:<input id="sec_${targetId}" type="number" min="0" max="100" placeholder="0-100" style="width:72px;"></div>`;
+                let html = `<div class="rating-note">请对 ${targetYear} 年度本组里的其他成员进行互评（公开分年底公布，悄悄分永久保密）。</div>`;
+                for(let m of rateTargets) {
+                    const targetId = m.id;
+                    html += `<div class="member-item">${m.student_id || targetId} (${m.role}) 公开分:<input id="pub_${targetId}" type="number" min="0" max="100" placeholder="0-100" style="width:72px;"> 悄悄分:<input id="sec_${targetId}" type="number" min="0" max="100" placeholder="0-100" style="width:72px;"></div>`;
                 }
                 html += `<button class="btn btn-primary" id="submitYearlyRatingBtn">提交年度评分</button>`;
                 document.getElementById('yearly-rating-panel').innerHTML = html;
-                document.getElementById('submitYearlyRatingBtn')?.addEventListener('click', () => submitYearlyRating(targetYear, members));
-            } catch(e) {}
+                document.getElementById('submitYearlyRatingBtn')?.addEventListener('click', () => submitYearlyRating(targetYear, rateTargets));
+            } catch(e) {
+                document.getElementById('yearly-rating-panel').innerHTML = `<div>加载评分成员失败，请刷新页面。</div>`;
+            }
         }
 
         async function submitYearlyRating(year, members) {
@@ -938,7 +942,12 @@
             let missingItems = [];
             let rangeItems = [];
             for (let m of members) {
-                const targetId = m.student_id || m.id;
+                // 额外保护：跳过当前参与者本身
+                const selfPid = currentUser?.id;
+                if (m.id === selfPid) {
+                    continue;
+                }
+                const targetId = m.id;
                 if (!targetId) continue;
                 const title = `${m.student_id || targetId}(${m.role || '成员'})`;
                 const pubInput = document.getElementById(`pub_${targetId}`);
@@ -1128,7 +1137,7 @@
                 let canAct = (currentUser.role === 'CEO' || currentUser.role === 'HR');
                 let actionHtml = `<div>${canAct ? "<strong>人事操作</strong>" : "仅CEO/HR可操作"}</div>`;
                 if(canAct) {
-                    actionHtml += `<select id="fire-target" class="form-select"><option value="">裁员</option>${members.map(m => `<option value="${m.id}">${m.id} (${m.role})</option>`).join('')}</select> <button id="fireBtn" class="btn btn-danger">🔥 裁员 (N+2补偿)</button> <hr><div><strong>挖人</strong><input id="target-pid" placeholder="目标学号" class="form-input"><input id="target-role" placeholder="目标角色" class="form-input"><input id="target-salary" placeholder="年薪(万)" class="form-input"><button id="directRecruitBtn" class="btn btn-primary">发送橄榄枝</button></div>`;
+                    actionHtml += `<select id="fire-target" class="form-select"><option value="">裁员</option>${members.map(m => `<option value="${m.id}">${m.role}</option>`).join('')}</select> <button id="fireBtn" class="btn btn-danger">🔥 裁员 (N+2补偿)</button> <hr><div><strong>挖人</strong><input id="target-pid" placeholder="目标学号" class="form-input"><input id="target-role" placeholder="目标角色" class="form-input"><input id="target-salary" placeholder="年薪(万)" class="form-input"><button id="directRecruitBtn" class="btn btn-primary">发送橄榄枝</button></div>`;
                 } else {
                     actionHtml += `<div>可向CEO/HR谏言</div>`;
                 }

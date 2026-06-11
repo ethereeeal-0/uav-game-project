@@ -19,10 +19,17 @@ module.exports = function(db) {
 
     const { classroom_id, participant_id } = req.session;
     let fromId;
+    let fromParticipant;
     if (req.session.user_type === 'student') {
-      const participant = db.prepare('SELECT student_id FROM participants WHERE id = ?').get(participant_id);
-      if (!participant) return res.status(404).json({ error: '当前参与者不存在' });
-      fromId = participant.student_id;
+      fromParticipant = db.prepare('SELECT * FROM participants WHERE id = ?').get(participant_id);
+      if (!fromParticipant) return res.status(404).json({ error: '当前参与者不存在' });
+      fromId = fromParticipant.id;
+      const existed = db.prepare(
+        "SELECT id FROM ratings WHERE classroom_id = ? AND from_id = ? AND year = ? AND type IN ('public','secret')"
+      ).get(classroom_id, fromId, yearInt);
+      if (existed) {
+        return res.status(400).json({ error: '您本季度的年度评分已提交，无法重复提交' });
+      }
     } else {
       fromId = req.session.teacher_username || 'teacher';
     }
@@ -37,6 +44,26 @@ module.exports = function(db) {
           const toId = r?.to_id ?? r?.toId;
           if (!r || toId == null || toId === '' || !r.type || !validTypes.includes(r.type)) {
             throw new Error(`无效评分条目 ${index + 1}`);
+          }
+          if (req.session.user_type === 'student') {
+            const targetId = Number(toId);
+            if (!Number.isInteger(targetId)) {
+              throw new Error(`无效评分目标 ${index + 1}`);
+            }
+            const toParticipant = db.prepare(
+              'SELECT * FROM participants WHERE classroom_id = ? AND id = ?'
+            ).get(classroom_id, targetId);
+            if (!toParticipant) {
+              throw new Error(`评分目标不存在 ${index + 1}`);
+            }
+            if (fromParticipant.id === toParticipant.id) {
+              throw new Error('不能对自己评分');
+            }
+            if (toParticipant.team_id !== fromParticipant.team_id) {
+              throw new Error('只能给本团队的成员评分');
+            }
+          } else if (fromId === toId) {
+            throw new Error('不能对自己评分');
           }
           const score = Number(r.score);
           if (!Number.isInteger(score) || score < 0 || score > 100) {
@@ -83,6 +110,9 @@ module.exports = function(db) {
           if (!r || toId == null || toId === '' || !r.type || typeof score !== 'number' || Number.isNaN(score) || score < 0 || score > 100) {
             throw new Error('无效评分条目');
           }
+          if (fromId === toId) {
+            throw new Error('不能对自己评分');
+          }
           insert.run(classroom_id, fromId, toId, r.type, score, year, half);
         }
       });
@@ -98,10 +128,11 @@ module.exports = function(db) {
   router.get('/check/:year', auth, (req, res) => {
     if (req.session.user_type !== 'student') return res.json({ rated: false });
 
-    const participant = db.prepare('SELECT student_id FROM participants WHERE id = ?').get(req.session.participant_id);
+    const participant = db.prepare('SELECT id FROM participants WHERE id = ?').get(req.session.participant_id);
+    if (!participant) return res.status(404).json({ error: '当前参与者不存在' });
     const existing = db.prepare(
       "SELECT id FROM ratings WHERE classroom_id = ? AND from_id = ? AND year = ? AND type IN ('public','secret')"
-    ).get(req.session.classroom_id, participant.student_id, parseInt(req.params.year));
+    ).get(req.session.classroom_id, participant.id, parseInt(req.params.year));
 
     res.json({ rated: !!existing });
   });
